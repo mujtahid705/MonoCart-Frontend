@@ -8,18 +8,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import Image from "next/image";
 import Link from "next/link";
+import { useAppDispatch } from "@/hooks/hooks";
+import { registerUser } from "@/redux/slices/userSlice";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -27,20 +25,29 @@ export default function RegisterPage() {
     lastName: "",
     email: "",
     phone: "",
-    address: "",
-    city: "",
-    postCode: "",
-    country: "",
-    region: "",
     password: "",
     confirmPassword: "",
     agreeToTerms: false,
-    subscribeNewsletter: false,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Registration attempt:", formData);
+    const data = {
+      email: formData.email,
+      password: formData.password,
+      name: `${formData.firstName} ${formData.lastName}`,
+      phone: `+88${formData.phone}`,
+    };
+
+    dispatch(registerUser(data))
+      .unwrap()
+      .then((res) => {
+        router.push("/login");
+      })
+      .catch((err) => {
+        console.error("Registration failed:", err);
+      });
   };
 
   const handleInputChange = (field: string, value: string | boolean) => {
@@ -158,94 +165,6 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="address">Address</Label>
-                  <Input
-                    id="address"
-                    placeholder="Address Line 1"
-                    value={formData.address}
-                    onChange={(e) =>
-                      handleInputChange("address", e.target.value)
-                    }
-                    className="h-12"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="city">City*</Label>
-                    <Select
-                      onValueChange={(value) =>
-                        handleInputChange("city", value)
-                      }
-                    >
-                      <SelectTrigger className="h-12">
-                        <SelectValue placeholder="City" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="new-york">New York</SelectItem>
-                        <SelectItem value="los-angeles">Los Angeles</SelectItem>
-                        <SelectItem value="chicago">Chicago</SelectItem>
-                        <SelectItem value="houston">Houston</SelectItem>
-                        <SelectItem value="phoenix">Phoenix</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="postCode">Post Code</Label>
-                    <Input
-                      id="postCode"
-                      placeholder="Post Code"
-                      value={formData.postCode}
-                      onChange={(e) =>
-                        handleInputChange("postCode", e.target.value)
-                      }
-                      className="h-12"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="country">Country*</Label>
-                    <Select
-                      onValueChange={(value) =>
-                        handleInputChange("country", value)
-                      }
-                    >
-                      <SelectTrigger className="h-12">
-                        <SelectValue placeholder="Country" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="us">United States</SelectItem>
-                        <SelectItem value="ca">Canada</SelectItem>
-                        <SelectItem value="uk">United Kingdom</SelectItem>
-                        <SelectItem value="au">Australia</SelectItem>
-                        <SelectItem value="de">Germany</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="region">Region/State</Label>
-                    <Select
-                      onValueChange={(value) =>
-                        handleInputChange("region", value)
-                      }
-                    >
-                      <SelectTrigger className="h-12">
-                        <SelectValue placeholder="Region/State" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="california">California</SelectItem>
-                        <SelectItem value="texas">Texas</SelectItem>
-                        <SelectItem value="florida">Florida</SelectItem>
-                        <SelectItem value="new-york">New York</SelectItem>
-                        <SelectItem value="illinois">Illinois</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="password">Password*</Label>
@@ -339,26 +258,6 @@ export default function RegisterPage() {
                       >
                         Privacy Policy
                       </motion.a>
-                    </Label>
-                  </div>
-
-                  <div className="flex items-start space-x-3">
-                    <Checkbox
-                      id="newsletter"
-                      checked={formData.subscribeNewsletter}
-                      onCheckedChange={(checked) =>
-                        handleInputChange(
-                          "subscribeNewsletter",
-                          checked as boolean
-                        )
-                      }
-                      className="mt-0.5"
-                    />
-                    <Label
-                      htmlFor="newsletter"
-                      className="text-sm text-gray-600"
-                    >
-                      Subscribe to our newsletter for updates and special offers
                     </Label>
                   </div>
                 </div>

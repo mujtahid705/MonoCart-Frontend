@@ -11,8 +11,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import Image from "next/image";
 import Link from "next/link";
+import { loginUser } from "@/redux/slices/userSlice";
+import { useAppDispatch } from "@/hooks/hooks";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -23,6 +28,15 @@ export default function LoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Login attempt:", formData);
+    const data = {
+      email: formData.email,
+      password: formData.password,
+    };
+    dispatch(loginUser(data))
+      .unwrap()
+      .then((res) => {
+        router.push("/");
+      });
   };
 
   const handleInputChange = (field: string, value: string | boolean) => {
