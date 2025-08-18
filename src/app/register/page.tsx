@@ -14,6 +14,7 @@ import Link from "next/link";
 import { useAppDispatch } from "@/hooks/hooks";
 import { registerUser } from "@/redux/slices/userSlice";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -44,9 +45,11 @@ export default function RegisterPage() {
       .unwrap()
       .then((res) => {
         router.push("/login");
+        toast.success("Registration successful! Please login to continue.");
       })
       .catch((err) => {
         console.error("Registration failed:", err);
+        toast.error("Registration failed. Please try again.");
       });
   };
 

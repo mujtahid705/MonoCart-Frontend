@@ -14,6 +14,7 @@ import Link from "next/link";
 import { loginUser } from "@/redux/slices/userSlice";
 import { useAppDispatch } from "@/hooks/hooks";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -35,7 +36,12 @@ export default function LoginPage() {
     dispatch(loginUser(data))
       .unwrap()
       .then((res) => {
+        toast.success("Login successful!");
         router.push("/");
+      })
+      .catch((err) => {
+        console.error("Login failed:", err);
+        toast.error("Login failed. Please try again.");
       });
   };
 
@@ -76,8 +82,8 @@ export default function LoginPage() {
                   <Image
                     src="/monocart-logo.png"
                     alt="Monocart"
-                    width={120}
-                    height={40}
+                    width={150}
+                    height={70}
                     className="h-12 w-auto"
                   />
                 </div>

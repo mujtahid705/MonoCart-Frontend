@@ -95,8 +95,7 @@ const userSlice = createSlice({
           try {
             const parsedToken = JSON.parse(token);
             if (parsedToken) {
-              // Here you would typically validate the token or fetch user data
-              // For now, we'll set a basic logged-in state
+              // Validate token logic needed with user data
               state.isLoggedIn = true;
               state.userData.token = parsedToken;
             }
@@ -154,10 +153,6 @@ const userSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading.register = false;
-        console.log("RESPONSE:", action.payload);
-        // state.id = action.payload.id;
-        // state.name = action.payload.name;
-        // state.email = action.payload.email;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading.register = false;
