@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface ImageWithFallbackProps {
   src: string;
@@ -15,13 +15,19 @@ export function ImageWithFallback({
   src,
   alt,
   className,
-  fallbackSrc = "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop",
+  fallbackSrc = "/vercel.svg",
   width = 300,
   height = 300,
   fill = false,
 }: ImageWithFallbackProps) {
   const [imgSrc, setImgSrc] = useState(src);
   const [hasError, setHasError] = useState(false);
+
+  // Reset image when the src prop changes (e.g., user selects another thumbnail)
+  useEffect(() => {
+    setImgSrc(src);
+    setHasError(false);
+  }, [src]);
 
   const handleError = () => {
     if (!hasError) {

@@ -115,7 +115,7 @@ export function HeroSection() {
               <div className="relative bg-gradient-to-br from-orange-100 to-yellow-50 rounded-3xl p-8 shadow-2xl">
                 <div className="aspect-square rounded-2xl overflow-hidden shadow-lg">
                   <ImageWithFallback
-                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=500&fit=crop&crop=face"
+                    src="https://images.pexels.com/photos/1183266/pexels-photo-1183266.jpeg"
                     alt="Fashion Model"
                     className="w-full h-full object-cover"
                     width={500}

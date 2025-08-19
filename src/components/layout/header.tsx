@@ -1,20 +1,49 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Search, ShoppingCart, User, Heart, Menu } from "lucide-react";
+import {
+  Search,
+  ShoppingCart,
+  User,
+  Heart,
+  Menu,
+  LogOut,
+  UserCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "@/redux/store";
+import { logout, initializeAuth } from "@/redux/slices/userSlice";
+import Image from "next/image";
 
 export function Header() {
   const pathname = usePathname();
+  const router = useRouter();
+  const dispatch = useDispatch();
   const [mounted, setMounted] = useState(false);
+
+  const { isLoggedIn, userData } = useSelector(
+    (state: RootState) => state.user
+  );
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    dispatch(initializeAuth());
+  }, [dispatch]);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    router.push("/");
+  };
 
   return (
     <motion.header
@@ -30,14 +59,13 @@ export function Header() {
             whileHover={{ scale: 1.05 }}
           >
             <Link href="/">
-              <div className="flex items-center space-x-2">
-                <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">M</span>
-                </div>
-                <span className="text-xl font-bold text-gray-900">
-                  Monocart
-                </span>
-              </div>
+              <Image
+                src="/monocart-logo2.png"
+                alt="Monocart"
+                width={150}
+                height={0}
+                style={{ height: "auto" }}
+              />
             </Link>
           </motion.div>
 
@@ -47,6 +75,11 @@ export function Header() {
               { name: "Shop", href: "/products" },
               { name: "About", href: "/about" },
               { name: "Contact", href: "/contact" },
+              // Conditionally add Dashboard for admin/superAdmin
+              ...(isLoggedIn &&
+              (userData.role === "admin" || userData.role === "superAdmin")
+                ? [{ name: "Dashboard", href: "/dashboard" }]
+                : []),
             ].map((item) => (
               <motion.div key={item.name}>
                 <Link
@@ -92,11 +125,38 @@ export function Header() {
               ))}
 
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <Link href="/login">
-                  <Button variant="ghost" size="sm">
-                    <User className="w-5 h-5" />
-                  </Button>
-                </Link>
+                {isLoggedIn ? (
+                  <DropdownMenu
+                    trigger={
+                      <Button variant="ghost" size="sm" className="relative">
+                        <UserCircle className="w-5 h-5 text-orange-500" />
+                        <span className="absolute -top-1 -right-1 bg-green-500 w-2 h-2 rounded-full"></span>
+                      </Button>
+                    }
+                  >
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <p className="text-sm font-medium text-gray-900">
+                        {userData.name}
+                      </p>
+                      <p className="text-xs text-gray-500">{userData.email}</p>
+                    </div>
+                    <DropdownMenuItem onClick={() => router.push("/profile")}>
+                      <UserCircle className="w-4 h-4 mr-2" />
+                      Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout}>
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenu>
+                ) : (
+                  <Link href="/login">
+                    <Button variant="ghost" size="sm">
+                      <User className="w-5 h-5" />
+                    </Button>
+                  </Link>
+                )}
               </motion.div>
             </div>
 

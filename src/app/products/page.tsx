@@ -1,187 +1,118 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ProductCard } from "@/components/products/product-card";
-
-const allProducts = [
-  {
-    id: "1",
-    name: "Premium Cotton T-shirt",
-    price: 15.0,
-    originalPrice: 25.0,
-    rating: 4.5,
-    reviews: 127,
-    image: "white cotton tshirt",
-    category: "clothing",
-  },
-  {
-    id: "2",
-    name: "Athletic Sport Shoes",
-    price: 89.0,
-    originalPrice: 120.0,
-    rating: 4.8,
-    reviews: 89,
-    image: "black sport shoes",
-    category: "shoes",
-  },
-  {
-    id: "3",
-    name: "Designer Denim Jacket",
-    price: 32.0,
-    originalPrice: 45.0,
-    rating: 4.3,
-    reviews: 156,
-    image: "denim jacket women",
-    category: "clothing",
-  },
-  {
-    id: "4",
-    name: "Luxury Handbag",
-    price: 45.0,
-    originalPrice: 65.0,
-    rating: 4.6,
-    reviews: 98,
-    image: "leather handbag",
-    category: "bags",
-  },
-  {
-    id: "5",
-    name: "Classic Casual Shirt",
-    price: 28.0,
-    originalPrice: 40.0,
-    rating: 4.4,
-    reviews: 73,
-    image: "mens casual shirt",
-    category: "clothing",
-  },
-  {
-    id: "6",
-    name: "Smart Casual T-shirt",
-    price: 22.0,
-    originalPrice: 35.0,
-    rating: 4.7,
-    reviews: 92,
-    image: "womens smart tshirt",
-    category: "clothing",
-  },
-  {
-    id: "7",
-    name: "Organic Cotton Tee",
-    price: 18.0,
-    originalPrice: 28.0,
-    rating: 4.5,
-    reviews: 134,
-    image: "cotton womens tshirt",
-    category: "clothing",
-  },
-  {
-    id: "8",
-    name: "Performance Sneakers",
-    price: 75.0,
-    originalPrice: 95.0,
-    rating: 4.6,
-    reviews: 67,
-    image: "womens running shoes",
-    category: "shoes",
-  },
-  {
-    id: "9",
-    name: "Essential T-shirt",
-    price: 20.0,
-    originalPrice: 30.0,
-    rating: 4.3,
-    reviews: 88,
-    image: "mens casual tshirt",
-    category: "clothing",
-  },
-  {
-    id: "10",
-    name: "Designer Tote Bag",
-    price: 55.0,
-    originalPrice: 75.0,
-    rating: 4.8,
-    reviews: 156,
-    image: "smart womens bag",
-    category: "bags",
-  },
-  {
-    id: "11",
-    name: "Premium Cotton T-shirt",
-    price: 32.99,
-    originalPrice: 40.99,
-    rating: 4.2,
-    reviews: 45,
-    image: "white cotton tshirt",
-    category: "clothing",
-  },
-  {
-    id: "12",
-    name: "Athletic Sport Shoes",
-    price: 85.0,
-    originalPrice: 120.0,
-    rating: 4.9,
-    reviews: 234,
-    image: "black sport shoes",
-    category: "shoes",
-  },
-];
-
-const categories = [
-  { id: "all", name: "All Products", count: allProducts.length },
-  {
-    id: "clothing",
-    name: "Clothing",
-    count: allProducts.filter((p) => p.category === "clothing").length,
-  },
-  {
-    id: "shoes",
-    name: "Shoes",
-    count: allProducts.filter((p) => p.category === "shoes").length,
-  },
-  {
-    id: "bags",
-    name: "Bags",
-    count: allProducts.filter((p) => p.category === "bags").length,
-  },
-  {
-    id: "cosmetics",
-    name: "Cosmetics",
-    count: allProducts.filter((p) => p.category === "cosmetics").length,
-  },
-];
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState, AppDispatch } from "@/redux/store";
+import { fetchAllProducts } from "@/redux/slices/productsSlice";
+type CardProduct = {
+  id: string;
+  name: string;
+  price: number;
+  originalPrice: number;
+  rating: number;
+  reviews: number;
+  image: string;
+  category: string;
+};
 
 export default function ProductsPage() {
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const dispatch = useDispatch<AppDispatch>();
+  const { items, loading, error } = useSelector((s: RootState) => s.products);
+  // Hard-coded categories and subcategories for now
+  const categories = useMemo(
+    () => [
+      { id: 1, name: "Clothing" },
+      { id: 2, name: "Gadgets" },
+      { id: 3, name: "Bags" },
+    ],
+    []
+  );
+  const subCategories = useMemo(
+    () =>
+      ({
+        1: [
+          { id: 1, name: "Men" },
+          { id: 2, name: "Women" },
+        ],
+        2: [
+          { id: 1, name: "Consoles" },
+          { id: 2, name: "Phones" },
+        ],
+        3: [
+          { id: 1, name: "Tote" },
+          { id: 2, name: "Backpacks" },
+        ],
+      } as Record<number, { id: number; name: string }[]>),
+    []
+  );
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | "">("");
+  const [selectedSubCategoryId, setSelectedSubCategoryId] = useState<
+    number | ""
+  >("");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("featured");
 
-  const filteredProducts = allProducts.filter((product) => {
-    const matchesCategory =
-      selectedCategory === "all" || product.category === selectedCategory;
-    const matchesSearch = product.name
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  useEffect(() => {
+    // Fetch on first load
+    if (!items.length) dispatch(fetchAllProducts());
+  }, [dispatch]);
 
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
+  useEffect(() => {
+    // Fetch when filters change
+    const hasCat = selectedCategoryId !== "";
+    const hasSub = selectedSubCategoryId !== "";
+    if (!hasCat && !hasSub) {
+      dispatch(fetchAllProducts());
+      return;
+    }
+    const payload: { category?: number; subCategory?: number } = {};
+    if (hasCat) payload.category = selectedCategoryId as number;
+    if (hasSub) payload.subCategory = selectedSubCategoryId as number;
+    dispatch(fetchAllProducts(payload));
+  }, [dispatch, selectedCategoryId, selectedSubCategoryId]);
+
+  const allProducts: CardProduct[] = useMemo(
+    () =>
+      items.map((p) => ({
+        id: String(p.id),
+        name: p.title ?? "Untitled",
+        price: Number(p.price) || 0,
+        originalPrice: Number(p.price) || 0,
+        rating: 0,
+        reviews: 0,
+        image: p.images?.[0]?.url || "/vercel.svg",
+        category: p.brand || "all",
+      })),
+    [items]
+  );
+
+  const filteredProducts = useMemo(() => {
+    // Server returns filtered list; only apply search here
+    const q = searchQuery.toLowerCase();
+    if (!q) return allProducts;
+    return allProducts.filter((p) => p.name.toLowerCase().includes(q));
+  }, [allProducts, searchQuery]);
+
+  const sortedProducts = useMemo(() => {
+    const arr = [...filteredProducts];
     switch (sortBy) {
       case "price-low":
-        return a.price - b.price;
+        return arr.sort((a, b) => a.price - b.price);
       case "price-high":
-        return b.price - a.price;
+        return arr.sort((a, b) => b.price - a.price);
       case "rating":
-        return b.rating - a.rating;
+        return arr.sort((a, b) => b.rating - a.rating);
       case "newest":
-        return parseInt(b.id) - parseInt(a.id);
+        return arr.sort((a, b) => Number(b.id) - Number(a.id));
       default:
-        return 0;
+        return arr;
     }
-  });
+  }, [filteredProducts, sortBy]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -220,6 +151,59 @@ export default function ProductsPage() {
               />
             </div>
 
+            <div className="flex items-center gap-2">
+              <select
+                value={
+                  selectedCategoryId === "" ? "" : String(selectedCategoryId)
+                }
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setSelectedCategoryId(v ? Number(v) : "");
+                  setSelectedSubCategoryId("");
+                }}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              >
+                <option value="">All Categories</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              {selectedCategoryId !== "" && (
+                <select
+                  value={
+                    selectedSubCategoryId === ""
+                      ? ""
+                      : String(selectedSubCategoryId)
+                  }
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setSelectedSubCategoryId(v ? Number(v) : "");
+                  }}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  <option value="">All Subcategories</option>
+                  {(subCategories[selectedCategoryId as number] || []).map(
+                    (s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    )
+                  )}
+                </select>
+              )}
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSelectedCategoryId("");
+                  setSelectedSubCategoryId("");
+                }}
+              >
+                Clear
+              </Button>
+            </div>
+
             <div className="flex items-center space-x-2">
               <Filter className="w-4 h-4 text-gray-400" />
               <select
@@ -237,32 +221,6 @@ export default function ProductsPage() {
           </div>
         </motion.div>
 
-        {/* Categories */}
-        <motion.div
-          className="mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-        >
-          <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <motion.button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  selectedCategory === category.id
-                    ? "bg-orange-500 text-white shadow-lg"
-                    : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
-                }`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {category.name} ({category.count})
-              </motion.button>
-            ))}
-          </div>
-        </motion.div>
-
         {/* Results Count */}
         <motion.div
           className="mb-6"
@@ -271,7 +229,11 @@ export default function ProductsPage() {
           transition={{ duration: 0.6, delay: 0.4 }}
         >
           <p className="text-gray-600">
-            Showing {sortedProducts.length} of {allProducts.length} products
+            {loading
+              ? "Loading products..."
+              : error
+              ? `Error: ${error}`
+              : `Showing ${sortedProducts.length} of ${allProducts.length} products`}
           </p>
         </motion.div>
 
@@ -282,13 +244,15 @@ export default function ProductsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
         >
-          {sortedProducts.map((product, index) => (
-            <ProductCard key={product.id} product={product} index={index} />
-          ))}
+          {!loading &&
+            !error &&
+            sortedProducts.map((product, index) => (
+              <ProductCard key={product.id} product={product} index={index} />
+            ))}
         </motion.div>
 
         {/* No Results */}
-        {sortedProducts.length === 0 && (
+        {!loading && !error && sortedProducts.length === 0 && (
           <motion.div
             className="text-center py-12"
             initial={{ opacity: 0 }}
@@ -307,7 +271,8 @@ export default function ProductsPage() {
             <Button
               onClick={() => {
                 setSearchQuery("");
-                setSelectedCategory("all");
+                setSelectedCategoryId("");
+                setSelectedSubCategoryId("");
               }}
               className="bg-orange-500 hover:bg-orange-600 text-white"
             >

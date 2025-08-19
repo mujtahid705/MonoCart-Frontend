@@ -11,8 +11,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import Image from "next/image";
 import Link from "next/link";
+import { loginUser } from "@/redux/slices/userSlice";
+import { useAppDispatch } from "@/hooks/hooks";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -23,6 +29,20 @@ export default function LoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Login attempt:", formData);
+    const data = {
+      email: formData.email,
+      password: formData.password,
+    };
+    dispatch(loginUser(data))
+      .unwrap()
+      .then((res) => {
+        toast.success("Login successful!");
+        router.push("/");
+      })
+      .catch((err) => {
+        console.error("Login failed:", err);
+        toast.error("Login failed. Please try again.");
+      });
   };
 
   const handleInputChange = (field: string, value: string | boolean) => {
@@ -62,8 +82,8 @@ export default function LoginPage() {
                   <Image
                     src="/monocart-logo.png"
                     alt="Monocart"
-                    width={120}
-                    height={40}
+                    width={150}
+                    height={70}
                     className="h-12 w-auto"
                   />
                 </div>

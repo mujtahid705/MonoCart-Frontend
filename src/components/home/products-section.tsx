@@ -5,107 +5,70 @@ import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/products/product-card";
 import Image from "next/image";
 import Link from "next/link";
+import React from "react";
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "@/redux/store";
+import { fetchAllProducts } from "@/redux/slices/productsSlice";
 
-const newArrivals = [
-  {
-    id: "1",
-    name: "Premium Cotton T-shirt",
-    price: 15.0,
-    originalPrice: 25.0,
-    rating: 4.5,
-    reviews: 127,
-    image: "white cotton tshirt",
-  },
-  {
-    id: "2",
-    name: "Athletic Sport Shoes",
-    price: 89.0,
-    originalPrice: 120.0,
-    rating: 4.8,
-    reviews: 89,
-    image: "black sport shoes",
-  },
-  {
-    id: "3",
-    name: "Designer Denim Jacket",
-    price: 32.0,
-    originalPrice: 45.0,
-    rating: 4.3,
-    reviews: 156,
-    image: "denim jacket women",
-  },
-  {
-    id: "4",
-    name: "Luxury Handbag",
-    price: 45.0,
-    originalPrice: 65.0,
-    rating: 4.6,
-    reviews: 98,
-    image: "leather handbag",
-  },
-  {
-    id: "5",
-    name: "Classic Casual Shirt",
-    price: 28.0,
-    originalPrice: 40.0,
-    rating: 4.4,
-    reviews: 73,
-    image: "mens casual shirt",
-  },
-];
-
-const womensCollection = [
-  {
-    id: "6",
-    name: "Smart Casual T-shirt",
-    price: 22.0,
-    originalPrice: 35.0,
-    rating: 4.7,
-    reviews: 92,
-    image: "womens smart tshirt",
-  },
-  {
-    id: "7",
-    name: "Organic Cotton Tee",
-    price: 18.0,
-    originalPrice: 28.0,
-    rating: 4.5,
-    reviews: 134,
-    image: "cotton womens tshirt",
-  },
-  {
-    id: "8",
-    name: "Performance Sneakers",
-    price: 75.0,
-    originalPrice: 95.0,
-    rating: 4.6,
-    reviews: 67,
-    image: "womens running shoes",
-  },
-  {
-    id: "9",
-    name: "Essential T-shirt",
-    price: 20.0,
-    originalPrice: 30.0,
-    rating: 4.3,
-    reviews: 88,
-    image: "mens casual tshirt",
-  },
-  {
-    id: "10",
-    name: "Designer Tote Bag",
-    price: 55.0,
-    originalPrice: 75.0,
-    rating: 4.8,
-    reviews: 156,
-    image: "smart womens bag",
-  },
-];
+type CardProduct = {
+  id: string;
+  name: string;
+  price: number;
+  originalPrice: number;
+  rating: number;
+  reviews: number;
+  image: string;
+};
 
 export function ProductsSection() {
+  const dispatch = useDispatch<AppDispatch>();
+  const [gadgets, setGadgets] = React.useState<CardProduct[]>([]);
+  const [womenProducts, setWomenProducts] = React.useState<CardProduct[]>([]);
+  const [loading, setLoading] = React.useState({ g: true, w: true });
+  const [error, setError] = React.useState<{
+    g: string | null;
+    w: string | null;
+  }>({ g: null, w: null });
+
+  React.useEffect(() => {
+    let active = true;
+    const mapToCard = (items: any[]): CardProduct[] =>
+      items.map((p) => ({
+        id: String(p.id),
+        name: p.title ?? "Untitled",
+        price: Number(p.price) || 0,
+        originalPrice: Number(p.price) || 0,
+        rating: 0,
+        reviews: 0,
+        image: p.images?.[0]?.url || "/vercel.svg",
+      }));
+
+    (async () => {
+      try {
+        const g = await dispatch(fetchAllProducts({ category: 2 })).unwrap();
+        if (active) setGadgets(mapToCard(g));
+      } catch (e: any) {
+        if (active) setError((s) => ({ ...s, g: e?.message || "Failed" }));
+      } finally {
+        if (active) setLoading((s) => ({ ...s, g: false }));
+      }
+      try {
+        const w = await dispatch(fetchAllProducts({ category: 1 })).unwrap();
+        if (active) setWomenProducts(mapToCard(w));
+      } catch (e: any) {
+        if (active) setError((s) => ({ ...s, w: e?.message || "Failed" }));
+      } finally {
+        if (active) setLoading((s) => ({ ...s, w: false }));
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [dispatch]);
+
   return (
     <>
-      {/* New Arrivals */}
+      {/* Gadgets */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -116,9 +79,9 @@ export function ProductsSection() {
             viewport={{ once: true }}
           >
             <div>
-              <h2 className="text-3xl font-bold text-gray-900">New Arrivals</h2>
+              <h2 className="text-3xl font-bold text-gray-900">Gadgets</h2>
               <p className="text-gray-600 mt-2">
-                Check out our latest products
+                Check out our latest gadgets!
               </p>
             </div>
             <Link href="/products">
@@ -127,9 +90,27 @@ export function ProductsSection() {
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-            {newArrivals.map((product, index) => (
-              <ProductCard key={product.id} product={product} index={index} />
-            ))}
+            {loading.g && (
+              <div className="col-span-full text-sm text-gray-500">
+                Loading gadgets...
+              </div>
+            )}
+            {error.g && !loading.g && (
+              <div className="col-span-full text-sm text-red-600">
+                {error.g}
+              </div>
+            )}
+            {!loading.g &&
+              !error.g &&
+              gadgets
+                .slice(0, 5)
+                .map((product, index) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    index={index}
+                  />
+                ))}
           </div>
         </div>
       </section>
@@ -147,7 +128,7 @@ export function ProductsSection() {
             >
               <div className="relative w-80 h-80 mx-auto">
                 <Image
-                  src="https://images.unsplash.com/photo-1494790108755-2616c96671b7?w=320&h=320&fit=crop&crop=face"
+                  src="https://images.pexels.com/photos/2085118/pexels-photo-2085118.jpeg"
                   alt="Women's Fashion"
                   width={320}
                   height={320}
@@ -192,13 +173,31 @@ export function ProductsSection() {
         </div>
       </section>
 
-      {/* Women's Products */}
+      {/* Clothings */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900">Fashion</h2>
+            <p className="text-gray-600 mt-2 mb-4">
+              Check out our latest fashion trends!
+            </p>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-            {womensCollection.map((product, index) => (
-              <ProductCard key={product.id} product={product} index={index} />
-            ))}
+            {loading.w && (
+              <div className="col-span-full text-sm text-gray-500">
+                Loading clothing products...
+              </div>
+            )}
+            {error.w && !loading.w && (
+              <div className="col-span-full text-sm text-red-600">
+                {error.w}
+              </div>
+            )}
+            {!loading.w &&
+              !error.w &&
+              womenProducts.map((product, index) => (
+                <ProductCard key={product.id} product={product} index={index} />
+              ))}
           </div>
         </div>
       </section>

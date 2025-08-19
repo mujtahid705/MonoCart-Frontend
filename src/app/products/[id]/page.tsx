@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -14,57 +14,84 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import Link from "next/link";
-
-interface ProductDetailPageProps {
-  params: Promise<{
-    id: string;
-  }>;
-}
-
-export default function ProductDetailPage({ params }: ProductDetailPageProps) {
-  // TODO: Use the id parameter to fetch actual product data
-  // const { id } = use(params);
+import { useParams } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchAllProducts,
+  fetchProductById,
+  type Product,
+} from "@/redux/slices/productsSlice";
+import type { RootState } from "@/redux/store";
+import { ProductCard } from "@/components/products/product-card";
+export default function ProductDetailPage() {
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState("M");
   const [selectedColor, setSelectedColor] = useState("Black");
   const [quantity, setQuantity] = useState(1);
+  const dispatch = useDispatch();
+  const {
+    currentItem: product,
+    currentLoading: loading,
+    currentError: error,
+  } = useSelector((s: RootState) => s.products);
+  const { items: relatedItems, loading: relatedLoading } = useSelector(
+    (s: RootState) => s.products
+  );
 
-  const productImages = [
-    "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=600&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=600&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=600&h=600&fit=crop",
-  ];
+  // Fetch product by id via thunk
+  useEffect(() => {
+    if (!id) return;
+    dispatch(fetchProductById(String(id)) as any);
+  }, [dispatch, id]);
+
+  // After product loads, fetch related products by category/subCategory
+  useEffect(() => {
+    if (!product) return;
+    const cat = product.categoryId;
+    const sub = product.subCategoryId;
+    if (cat || sub) {
+      dispatch(
+        fetchAllProducts({
+          category: cat ?? "",
+          subCategory: sub ?? "",
+        }) as any
+      );
+    }
+  }, [dispatch, product]);
 
   const sizes = ["XS", "S", "M", "L", "XL"];
   const colors = ["Black", "White", "Gray", "Navy"];
+  // Derive related products from store, filter out the current product id if present
+  const relatedProducts = useMemo(() => {
+    if (!product) return [] as Product[];
+    const pid = String(product.id);
+    return (relatedItems || []).filter((p) => String(p.id) !== pid).slice(0, 6);
+  }, [product, relatedItems]);
 
-  const relatedProducts = [
-    {
-      id: "11",
-      name: "Premium Cotton T-shirt",
-      price: 32.99,
-      originalPrice: 40.99,
-      image: "white cotton tshirt",
-    },
-    {
-      id: "12",
-      name: "Athletic Sport Shoes",
-      price: 85.0,
-      originalPrice: 120.0,
-      image: "black sport shoes",
-    },
-    {
-      id: "13",
-      name: "Designer Cotton Top",
-      price: 28.0,
-      originalPrice: 35.0,
-      image: "cotton womens top",
-    },
-  ];
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-600">
+        Loading product...
+      </div>
+    );
+  }
+  if (error || !product) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center text-red-600">
+        {error || "Product not found"}
+      </div>
+    );
+  }
+
+  const productImages: string[] = product.images.length
+    ? (product.images as any[]).map((im: any) =>
+        typeof im === "string" ? im : im?.url || "/vercel.svg"
+      )
+    : ["/vercel.svg"];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -127,8 +154,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           >
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Monocart Women&apos;s Solid Slim Fit Classic Round Neck Cotton
-                Fabric T-Shirt
+                {product.title}
               </h1>
               <div className="flex items-center space-x-4 mb-4">
                 <div className="flex items-center">
@@ -142,11 +168,15 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                 <span className="text-sm text-gray-600">(127 reviews)</span>
               </div>
               <div className="flex items-center space-x-4">
-                <span className="text-3xl font-bold text-gray-900">$15.00</span>
-                <span className="text-xl text-gray-500 line-through">
-                  $25.00
+                <span className="text-3xl font-bold text-gray-900">
+                  ৳ {product.price.toLocaleString()}
                 </span>
-                <Badge className="bg-red-500">40% OFF</Badge>
+                {false && (
+                  <span className="text-xl text-gray-500 line-through">
+                    ৳ {product?.price.toLocaleString()}
+                  </span>
+                )}
+                {false && <Badge className="bg-red-500">40% OFF</Badge>}
               </div>
             </div>
 
@@ -257,7 +287,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="font-medium">Brand</span>
-                  <span>Monocart</span>
+                  <span>{product.brand || "-"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium">Material</span>
@@ -276,6 +306,22 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           </motion.div>
         </div>
 
+        {/* Description section */}
+        <motion.section
+          className="mt-8"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+        >
+          <div className="bg-white rounded-lg p-6">
+            <h3 className="font-semibold mb-4">Description</h3>
+            <p className="text-sm text-gray-700 whitespace-pre-line">
+              {product.description}
+            </p>
+          </div>
+        </motion.section>
+
         <motion.section
           className="mt-16"
           initial={{ opacity: 0, y: 50 }}
@@ -286,44 +332,35 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           <h2 className="text-2xl font-bold text-gray-900 mb-8">
             Related Products
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {relatedProducts.map((product, index) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
+            {relatedProducts.slice(0, 5).map((r, index) => (
               <motion.div
-                key={product.id}
+                key={r.id}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
                 whileHover={{ y: -5 }}
               >
-                <Card className="group cursor-pointer overflow-hidden bg-white">
-                  <Link href={`/products/${product.id}`}>
-                    <div className="relative aspect-square overflow-hidden">
-                      <ImageWithFallback
-                        src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop"
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                  </Link>
-                  <div className="p-4">
-                    <Link href={`/products/${product.id}`}>
-                      <h3 className="font-medium text-gray-900 mb-2">
-                        {product.name}
-                      </h3>
-                    </Link>
-                    <div className="flex items-center space-x-2">
-                      <span className="font-bold text-gray-900">
-                        ${product.price}
-                      </span>
-                      <span className="text-sm text-gray-500 line-through">
-                        ${product.originalPrice}
-                      </span>
-                    </div>
-                  </div>
-                </Card>
+                <ProductCard
+                  index={index}
+                  product={{
+                    id: String(r.id),
+                    name: r.title,
+                    price: Number(r.price) || 0,
+                    originalPrice: Number(r.price) || 0,
+                    rating: 4.5,
+                    reviews: 0,
+                    image: r.images?.[0]?.url || "/vercel.svg",
+                  }}
+                />
               </motion.div>
             ))}
+            {relatedLoading && (
+              <div className="col-span-full text-center text-sm text-gray-500">
+                Loading related products...
+              </div>
+            )}
           </div>
         </motion.section>
       </div>
