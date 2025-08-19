@@ -23,6 +23,7 @@ import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
 import { logout, initializeAuth } from "@/redux/slices/userSlice";
+import Image from "next/image";
 
 export function Header() {
   const pathname = usePathname();
@@ -58,14 +59,13 @@ export function Header() {
             whileHover={{ scale: 1.05 }}
           >
             <Link href="/">
-              <div className="flex items-center space-x-2">
-                <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">M</span>
-                </div>
-                <span className="text-xl font-bold text-gray-900">
-                  Monocart
-                </span>
-              </div>
+              <Image
+                src="/monocart-logo2.png"
+                alt="Monocart"
+                width={150}
+                height={0}
+                style={{ height: "auto" }}
+              />
             </Link>
           </motion.div>
 
@@ -75,6 +75,11 @@ export function Header() {
               { name: "Shop", href: "/products" },
               { name: "About", href: "/about" },
               { name: "Contact", href: "/contact" },
+              // Conditionally add Dashboard for admin/superAdmin
+              ...(isLoggedIn &&
+              (userData.role === "admin" || userData.role === "superAdmin")
+                ? [{ name: "Dashboard", href: "/dashboard" }]
+                : []),
             ].map((item) => (
               <motion.div key={item.name}>
                 <Link

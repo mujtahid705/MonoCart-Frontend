@@ -56,6 +56,7 @@ interface UserState {
     email: string;
     phone: string;
     token: string;
+    role: "user" | "admin" | "superAdmin";
   };
   isLoggedIn: boolean;
 }
@@ -75,6 +76,7 @@ const initialState: UserState = {
     email: "",
     phone: "",
     token: "",
+    role: "user",
   },
   isLoggedIn: false,
 };
@@ -91,6 +93,7 @@ const userSlice = createSlice({
     initializeAuth: (state) => {
       if (typeof window !== "undefined") {
         const token = localStorage.getItem("token");
+        const roleRaw = localStorage.getItem("role");
         if (token) {
           try {
             const parsedToken = JSON.parse(token);
@@ -98,6 +101,18 @@ const userSlice = createSlice({
               // Validate token logic needed with user data
               state.isLoggedIn = true;
               state.userData.token = parsedToken;
+              if (roleRaw) {
+                try {
+                  const parsedRole = JSON.parse(roleRaw);
+                  if (parsedRole === "admin" || parsedRole === "superAdmin") {
+                    state.userData.role = parsedRole;
+                  } else {
+                    state.userData.role = "user";
+                  }
+                } catch {
+                  state.userData.role = "user";
+                }
+              }
             }
           } catch (error) {
             localStorage.removeItem("token");
@@ -112,10 +127,12 @@ const userSlice = createSlice({
         email: "",
         phone: "",
         token: "",
+        role: "user",
       };
       state.isLoggedIn = false;
       if (typeof window !== "undefined") {
         localStorage.removeItem("token");
+        localStorage.removeItem("role");
       }
     },
   },
@@ -130,13 +147,22 @@ const userSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading.login = false;
         console.log("RESPONSE:", action.payload);
-        localStorage.setItem("token", JSON.stringify(action.payload.token));
+        if (typeof window !== "undefined") {
+          localStorage.setItem("token", JSON.stringify(action.payload.token));
+          if (action.payload?.user?.role) {
+            localStorage.setItem(
+              "role",
+              JSON.stringify(action.payload.user.role)
+            );
+          }
+        }
         state.userData = {
           id: action.payload.user.id,
           name: action.payload.user.name,
           email: action.payload.user.email,
           phone: action.payload.user.phone,
           token: action.payload.token,
+          role: action.payload?.user?.role ?? "user",
         };
         state.isLoggedIn = true;
       })

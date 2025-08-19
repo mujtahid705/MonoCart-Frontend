@@ -48,7 +48,7 @@ export function ProductCard({ product, index }: ProductCardProps) {
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
 
             <ImageWithFallback
-              src={`https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=300&h=300&fit=crop`}
+              src={product.image}
               alt={product.name}
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
             />
@@ -132,17 +132,18 @@ export function ProductCard({ product, index }: ProductCardProps) {
               <div className="space-y-1">
                 <div className="flex items-center space-x-2">
                   <span className="text-lg font-bold text-gray-900">
-                    ${product.price}
+                    ৳ {product.price.toLocaleString()}
                   </span>
                   {product.originalPrice > product.price && (
                     <span className="text-sm text-gray-500 line-through">
-                      ${product.originalPrice}
+                      ৳ {product.originalPrice.toLocaleString()}
                     </span>
                   )}
                 </div>
                 {product.originalPrice > product.price && (
                   <p className="text-xs text-green-600 font-medium">
-                    Save ${(product.originalPrice - product.price).toFixed(2)}
+                    Save ৳{" "}
+                    {(product.originalPrice - product.price).toLocaleString()}
                   </p>
                 )}
               </div>

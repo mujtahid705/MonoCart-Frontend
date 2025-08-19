@@ -100,14 +100,14 @@ export function CategoriesSection() {
               whileTap={{ scale: 0.98 }}
               className="group"
             >
-              <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer bg-white">
+              <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-2xl hover:ring-2 hover:ring-orange-400/30 transition-all duration-500 cursor-pointer bg-white">
                 <div
-                  className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}
+                  className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500 z-0`}
                 />
 
-                <div className="relative p-8 text-center">
+                <div className="relative z-10 p-8 text-center">
                   <motion.div
-                    className={`w-20 h-20 mx-auto mb-6 ${category.bgColor} rounded-2xl flex items-center justify-center relative overflow-hidden group-hover:scale-110 transition-transform duration-300`}
+                    className={`w-20 h-20 mx-auto mb-6 ${category.bgColor} rounded-2xl flex items-center justify-center relative z-10 overflow-hidden group-hover:scale-110 transition-transform duration-300`}
                     whileHover={{ rotate: 5 }}
                   >
                     <div
@@ -154,13 +154,6 @@ export function CategoriesSection() {
 
                 <div className="absolute top-4 right-4 w-2 h-2 bg-orange-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="absolute bottom-4 left-4 w-1 h-1 bg-orange-300 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100" />
-
-                <div
-                  className="absolute inset-0 rounded-lg bg-gradient-to-r from-orange-400/0 via-orange-400/20 to-orange-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                  style={{ padding: "1px" }}
-                >
-                  <div className="w-full h-full bg-white rounded-lg" />
-                </div>
               </Card>
             </motion.div>
           ))}
