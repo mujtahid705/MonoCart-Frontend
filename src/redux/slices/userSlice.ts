@@ -1,5 +1,17 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
+// Utility function to handle unauthorized responses
+const handleUnauthorized = (status: number, message?: string) => {
+  if (status === 401 || message?.toLowerCase().includes("unauthorized")) {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      localStorage.removeItem("userData");
+      window.location.href = "/";
+    }
+  }
+};
+
 // Login user
 export const loginUser = createAsyncThunk(
   "loginUser",
@@ -41,14 +53,39 @@ export const registerUser = createAsyncThunk(
   }
 );
 
+// Fetch All Users
+export const fetchAllUsers = createAsyncThunk(
+  "users/fetchAll",
+  async (token: string, { rejectWithValue }) => {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/users/all`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      handleUnauthorized(response.status, errorData?.message);
+      return rejectWithValue(errorData?.message || "Failed to fetch users");
+    }
+    return response.json();
+  }
+);
+
 interface UserState {
   loading: {
     login: boolean;
     register: boolean;
+    fetchAll: boolean;
   };
   error: {
     login: string | null;
     register: string | null;
+    fetchAll: string | null;
   };
   userData: {
     id: string;
@@ -58,17 +95,32 @@ interface UserState {
     token: string;
     role: "user" | "admin" | "superAdmin";
   };
+  users: Array<{
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    phone: string;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+  }>;
   isLoggedIn: boolean;
+  lastFetched: {
+    users: number | null;
+  };
 }
 
 const initialState: UserState = {
   loading: {
     login: false,
     register: false,
+    fetchAll: false,
   },
   error: {
     login: null,
     register: null,
+    fetchAll: null,
   },
   userData: {
     id: "",
@@ -78,7 +130,11 @@ const initialState: UserState = {
     token: "",
     role: "user",
   },
+  users: [],
   isLoggedIn: false,
+  lastFetched: {
+    users: null,
+  },
 };
 
 const userSlice = createSlice({
@@ -94,28 +150,29 @@ const userSlice = createSlice({
       if (typeof window !== "undefined") {
         const token = localStorage.getItem("token");
         const roleRaw = localStorage.getItem("role");
-        if (token) {
+        const userDataRaw = localStorage.getItem("userData");
+
+        if (token && userDataRaw) {
           try {
             const parsedToken = JSON.parse(token);
-            if (parsedToken) {
-              // Validate token logic needed with user data
+            const parsedUserData = JSON.parse(userDataRaw);
+
+            if (parsedToken && parsedUserData) {
               state.isLoggedIn = true;
-              state.userData.token = parsedToken;
-              if (roleRaw) {
-                try {
-                  const parsedRole = JSON.parse(roleRaw);
-                  if (parsedRole === "admin" || parsedRole === "superAdmin") {
-                    state.userData.role = parsedRole;
-                  } else {
-                    state.userData.role = "user";
-                  }
-                } catch {
-                  state.userData.role = "user";
-                }
-              }
+              state.userData = {
+                id: parsedUserData.id || "",
+                name: parsedUserData.name || "",
+                email: parsedUserData.email || "",
+                phone: parsedUserData.phone || "",
+                token: parsedToken,
+                role: parsedUserData.role || "user",
+              };
             }
           } catch (error) {
+            // Clear invalid data
             localStorage.removeItem("token");
+            localStorage.removeItem("role");
+            localStorage.removeItem("userData");
           }
         }
       }
@@ -133,6 +190,7 @@ const userSlice = createSlice({
       if (typeof window !== "undefined") {
         localStorage.removeItem("token");
         localStorage.removeItem("role");
+        localStorage.removeItem("userData");
       }
     },
   },
@@ -147,8 +205,18 @@ const userSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading.login = false;
         console.log("RESPONSE:", action.payload);
+
+        const userData = {
+          id: action.payload.user.id,
+          name: action.payload.user.name,
+          email: action.payload.user.email,
+          phone: action.payload.user.phone,
+          role: action.payload?.user?.role ?? "user",
+        };
+
         if (typeof window !== "undefined") {
           localStorage.setItem("token", JSON.stringify(action.payload.token));
+          localStorage.setItem("userData", JSON.stringify(userData));
           if (action.payload?.user?.role) {
             localStorage.setItem(
               "role",
@@ -156,13 +224,10 @@ const userSlice = createSlice({
             );
           }
         }
+
         state.userData = {
-          id: action.payload.user.id,
-          name: action.payload.user.name,
-          email: action.payload.user.email,
-          phone: action.payload.user.phone,
+          ...userData,
           token: action.payload.token,
-          role: action.payload?.user?.role ?? "user",
         };
         state.isLoggedIn = true;
       })
@@ -184,6 +249,22 @@ const userSlice = createSlice({
         state.loading.register = false;
         state.error.register = action.error.message || "Registration failed";
         console.error("Registration failed:", action.payload);
+      });
+
+    // Fetch All Users
+    builder
+      .addCase(fetchAllUsers.pending, (state) => {
+        state.loading.fetchAll = true;
+        state.error.fetchAll = null;
+      })
+      .addCase(fetchAllUsers.fulfilled, (state, action) => {
+        state.loading.fetchAll = false;
+        state.users = action.payload;
+        state.lastFetched.users = Date.now();
+      })
+      .addCase(fetchAllUsers.rejected, (state, action) => {
+        state.loading.fetchAll = false;
+        state.error.fetchAll = action.error.message || "Failed to fetch users";
       });
   },
 });

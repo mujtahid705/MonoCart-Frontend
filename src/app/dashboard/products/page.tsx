@@ -11,9 +11,24 @@ import type { RootState, AppDispatch } from "@/redux/store";
 import {
   fetchAllProducts,
   fetchProductById,
+  fetchCategories,
+  fetchSubcategories,
+  updateProduct,
 } from "@/redux/slices/productsSlice";
 import { useSelector as useReduxSelector } from "react-redux";
 import { toast } from "sonner";
+
+// Utility function to handle unauthorized responses
+const handleUnauthorized = (status: number, message?: string) => {
+  if (status === 401 || message?.toLowerCase().includes("unauthorized")) {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      localStorage.removeItem("userData");
+      window.location.href = "/";
+    }
+  }
+};
 
 // Minimal type reflecting only fields we will show
 type Product = {
@@ -32,10 +47,21 @@ export default function ProductsPage() {
     items: products,
     loading,
     error,
+    categories,
+    categoriesLoading,
+    categoriesError,
+    subcategories,
+    subcategoriesLoading,
+    updating,
+    lastFetched,
   } = useSelector((state: RootState) => state.products);
+
   const userToken = useReduxSelector((s: RootState) => s.user.userData.token);
   const [query, setQuery] = React.useState("");
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = React.useState<
+    number | null
+  >(null);
   const [form, setForm] = React.useState({
     title: "",
     description: "",
@@ -43,9 +69,17 @@ export default function ProductsPage() {
     stock: "",
     brand: "",
     images: [] as File[],
+    categoryId: "",
+    subCategoryId: "",
   });
   const [formError, setFormError] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
+
+  React.useEffect(() => {
+    if (selectedCategoryId) {
+      dispatch(fetchSubcategories(selectedCategoryId));
+    }
+  }, [selectedCategoryId, dispatch]);
 
   // Edit modal state
   const [isEditOpen, setIsEditOpen] = React.useState(false);
@@ -62,11 +96,39 @@ export default function ProductsPage() {
     brand: "",
     existingImages: [] as string[],
     newImages: [] as File[],
+    categoryId: "",
+    subCategoryId: "",
   });
 
   React.useEffect(() => {
-    dispatch(fetchAllProducts());
-  }, [dispatch]);
+    // Only fetch if data arrays are empty, not loading, and haven't been fetched recently
+    const shouldFetchProducts =
+      products.length === 0 &&
+      !loading &&
+      (!lastFetched.products ||
+        Date.now() - lastFetched.products > 1 * 60 * 1000); // 1 minute for products
+
+    const shouldFetchCategories =
+      categories.length === 0 &&
+      !categoriesLoading &&
+      (!lastFetched.categories ||
+        Date.now() - lastFetched.categories > 5 * 60 * 1000);
+
+    if (shouldFetchProducts) {
+      dispatch(fetchAllProducts());
+    }
+    if (shouldFetchCategories) {
+      dispatch(fetchCategories());
+    }
+  }, [
+    dispatch,
+    products.length,
+    loading,
+    categories.length,
+    categoriesLoading,
+    lastFetched.products,
+    lastFetched.categories,
+  ]);
 
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -91,7 +153,10 @@ export default function ProductsPage() {
         brand: p.brand || "",
         existingImages: (p.images || []).map((im: any) => im?.url || ""),
         newImages: [],
+        categoryId: p.categoryId ? String(p.categoryId) : "",
+        subCategoryId: p.subCategoryId ? String(p.subCategoryId) : "",
       });
+      if (p.categoryId) dispatch(fetchSubcategories(p.categoryId));
     } catch (e: any) {
       setEditError(e?.message || "Failed to load product");
       toast.error(e?.message || "Failed to load product");
@@ -168,17 +233,68 @@ export default function ProductsPage() {
                       {p.stock > 0 ? `${p.stock} in stock` : "Out of stock"}
                     </div>
                     <div className="col-span-2 sm:col-span-2 text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          openEdit(String(p.id));
-                        }}
-                      >
-                        Edit
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            openEdit(String(p.id));
+                          }}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+
+                            if (
+                              !confirm(
+                                "Are you sure you want to delete this product?"
+                              )
+                            ) {
+                              return;
+                            }
+
+                            try {
+                              const res = await fetch(
+                                `${process.env.NEXT_PUBLIC_BASE_URL}/products/${p.id}`,
+                                {
+                                  method: "DELETE",
+                                  headers: {
+                                    Authorization: `Bearer ${userToken}`,
+                                  },
+                                }
+                              );
+
+                              const data = await res.json().catch(() => ({}));
+
+                              if (!res.ok) {
+                                handleUnauthorized(res.status, data?.message);
+                                throw new Error(
+                                  data?.message || "Failed to delete product"
+                                );
+                              }
+
+                              toast.success(
+                                data?.message || "Product deleted successfully"
+                              );
+                              dispatch(fetchAllProducts()); // Refresh the list
+                            } catch (err: any) {
+                              toast.error(
+                                err.message || "Failed to delete product"
+                              );
+                            }
+                          }}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          Delete
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </Link>
@@ -210,7 +326,6 @@ export default function ProductsPage() {
                 e.preventDefault();
                 setFormError(null);
 
-                // Basic validation
                 if (!form.title.trim())
                   return setFormError("Title is required");
                 if (!form.description.trim())
@@ -221,7 +336,8 @@ export default function ProductsPage() {
                   return setFormError("Price must be a positive number");
                 if (!Number.isInteger(stockNum) || stockNum < 0)
                   return setFormError("Stock must be a non-negative integer");
-
+                if (!form.categoryId)
+                  return setFormError("Category is required");
                 if (!userToken) return setFormError("You must be logged in");
 
                 try {
@@ -231,9 +347,10 @@ export default function ProductsPage() {
                   fd.append("description", form.description.trim());
                   fd.append("price", String(priceNum));
                   fd.append("stock", String(stockNum));
-                  fd.append("categoryId", "1");
-                  fd.append("subCategoryId", "1");
                   fd.append("brand", form.brand.trim());
+                  fd.append("categoryId", String(form.categoryId));
+                  if (form.subCategoryId)
+                    fd.append("subCategoryId", String(form.subCategoryId));
                   form.images.forEach((file) => fd.append("images", file));
 
                   const res = await fetch(
@@ -251,7 +368,6 @@ export default function ProductsPage() {
                     throw new Error(err?.message || "Failed to create product");
                   }
 
-                  // success
                   toast.success("Product created successfully");
                   setIsModalOpen(false);
                   setForm({
@@ -261,6 +377,8 @@ export default function ProductsPage() {
                     stock: "",
                     brand: "",
                     images: [],
+                    categoryId: "",
+                    subCategoryId: "",
                   });
                   dispatch(fetchAllProducts());
                 } catch (err: any) {
@@ -306,30 +424,63 @@ export default function ProductsPage() {
                     }
                   />
                 </div>
-                <Input
-                  placeholder="Brand"
-                  value={form.brand}
-                  onChange={(e) =>
-                    setForm((s) => ({ ...s, brand: e.target.value }))
-                  }
-                />
-                {/* Hardcoded dropdowns for now */}
                 <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    placeholder="Brand"
+                    value={form.brand}
+                    onChange={(e) =>
+                      setForm((s) => ({ ...s, brand: e.target.value }))
+                    }
+                  />
                   <select
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    value="1"
-                    disabled
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-60"
+                    value={form.categoryId}
+                    onChange={(e) => {
+                      const newCategoryId = e.target.value;
+                      setSelectedCategoryId(Number(newCategoryId));
+                      console.log("Selected category:", newCategoryId);
+                      setForm((s) => ({
+                        ...s,
+                        categoryId: newCategoryId,
+                        subCategoryId: "",
+                      }));
+                      if (newCategoryId) {
+                        dispatch(fetchSubcategories(newCategoryId));
+                      }
+                    }}
                   >
-                    <option value="1">Category #1</option>
-                  </select>
-                  <select
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    value="1"
-                    disabled
-                  >
-                    <option value="1">Sub Category #1</option>
+                    <option value="" disabled>
+                      {categoriesLoading ? "Loading categories..." : "Category"}
+                    </option>
+                    {categories.length === 0 && !categoriesLoading && (
+                      <option disabled>No categories available</option>
+                    )}
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
+                <select
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-60"
+                  value={form.subCategoryId}
+                  onChange={(e) =>
+                    setForm((s) => ({ ...s, subCategoryId: e.target.value }))
+                  }
+                  disabled={!form.categoryId || subcategoriesLoading}
+                >
+                  <option value="" disabled>
+                    Subcategory
+                  </option>
+                  {subcategories
+                    .filter((sc) => String(sc.categoryId) === form.categoryId)
+                    .map((sc) => (
+                      <option key={sc.id} value={sc.id}>
+                        {sc.name}
+                      </option>
+                    ))}
+                </select>
                 <input
                   type="file"
                   multiple
@@ -342,6 +493,14 @@ export default function ProductsPage() {
                   }
                   className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100"
                 />
+                {categoriesLoading && (
+                  <div className="text-xs text-gray-500">
+                    Loading categories...
+                  </div>
+                )}
+                {categoriesError && (
+                  <div className="text-xs text-red-600">{categoriesError}</div>
+                )}
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2">
@@ -385,9 +544,6 @@ export default function ProductsPage() {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  // No API integration yet; just preview and close
-                  toast.info("Changes staged (no update API wired yet)");
-                  setIsEditOpen(false);
                 }}
                 className="space-y-4"
               >
@@ -428,13 +584,63 @@ export default function ProductsPage() {
                       }
                     />
                   </div>
-                  <Input
-                    placeholder="Brand"
-                    value={editForm.brand}
+                  <div className="grid grid-cols-2 gap-3">
+                    <Input
+                      placeholder="Brand"
+                      value={editForm.brand}
+                      onChange={(e) =>
+                        setEditForm((s) => ({ ...s, brand: e.target.value }))
+                      }
+                    />
+                    <select
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-60"
+                      value={editForm.categoryId}
+                      onChange={(e) => {
+                        const newCategoryId = e.target.value;
+                        setEditForm((s) => ({
+                          ...s,
+                          categoryId: newCategoryId,
+                          subCategoryId: "",
+                        }));
+                        if (newCategoryId) {
+                          dispatch(fetchSubcategories(newCategoryId));
+                        }
+                      }}
+                    >
+                      <option value="">
+                        {categoriesLoading
+                          ? "Loading categories..."
+                          : "Category"}
+                      </option>
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <select
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-60"
+                    value={editForm.subCategoryId}
                     onChange={(e) =>
-                      setEditForm((s) => ({ ...s, brand: e.target.value }))
+                      setEditForm((s) => ({
+                        ...s,
+                        subCategoryId: e.target.value,
+                      }))
                     }
-                  />
+                    disabled={!editForm.categoryId || subcategoriesLoading}
+                  >
+                    <option value="">Subcategory</option>
+                    {subcategories
+                      .filter(
+                        (sc) => String(sc.categoryId) === editForm.categoryId
+                      )
+                      .map((sc) => (
+                        <option key={sc.id} value={sc.id}>
+                          {sc.name}
+                        </option>
+                      ))}
+                  </select>
 
                   {/* Existing images */}
                   <div>
@@ -539,10 +745,45 @@ export default function ProductsPage() {
                     type="button"
                     variant="outline"
                     onClick={() => setIsEditOpen(false)}
+                    disabled={updating}
                   >
                     Cancel
                   </Button>
-                  <Button type="submit">Save</Button>
+                  <Button
+                    type="submit"
+                    disabled={updating}
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      if (!editingProductId) return;
+                      try {
+                        await dispatch(
+                          updateProduct({
+                            id: editingProductId,
+                            token: userToken,
+                            data: {
+                              title: editForm.title.trim(),
+                              description: editForm.description.trim(),
+                              price: Number(editForm.price) || 0,
+                              stock: Number(editForm.stock) || 0,
+                              brand: editForm.brand.trim(),
+                              categoryId: editForm.categoryId || undefined,
+                              subCategoryId:
+                                editForm.subCategoryId || undefined,
+                              existingImages: editForm.existingImages,
+                              newImages: editForm.newImages,
+                            },
+                          }) as any
+                        ).unwrap();
+                        toast.success("Product updated");
+                        setIsEditOpen(false);
+                        dispatch(fetchAllProducts());
+                      } catch (err: any) {
+                        toast.error(err?.message || "Failed to update");
+                      }
+                    }}
+                  >
+                    {updating ? "Saving..." : "Save"}
+                  </Button>
                 </div>
               </form>
             )}

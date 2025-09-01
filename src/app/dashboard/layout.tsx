@@ -6,7 +6,15 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { LayoutDashboard, Files, Users, Package, Settings } from "lucide-react";
+import {
+  LayoutDashboard,
+  Files,
+  Users,
+  Package,
+  Settings,
+  FolderOpen,
+  Tags,
+} from "lucide-react";
 
 export default function DashboardLayout({
   children,
@@ -26,6 +34,8 @@ export default function DashboardLayout({
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Products", href: "/dashboard/products", icon: Files },
+    { name: "Categories", href: "/dashboard/categories", icon: FolderOpen },
+    { name: "Subcategories", href: "/dashboard/subcategories", icon: Tags },
     { name: "Users", href: "/dashboard/users", icon: Users },
     { name: "Orders", href: "/dashboard/orders", icon: Package },
     { name: "Settings", href: "/dashboard/settings", icon: Settings },
