@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
@@ -15,7 +14,6 @@ import { loginUser } from "@/redux/slices/userSlice";
 import { useAppDispatch } from "@/hooks/hooks";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-
 export default function LoginPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -25,7 +23,6 @@ export default function LoginPage() {
     password: "",
     rememberMe: false,
   });
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Login attempt:", formData);
@@ -44,11 +41,9 @@ export default function LoginPage() {
         toast.error("Login failed. Please try again.");
       });
   };
-
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -63,7 +58,6 @@ export default function LoginPage() {
             <span>Back to Home</span>
           </Link>
         </motion.div>
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <motion.div
             className="order-2 lg:order-1"
@@ -92,7 +86,6 @@ export default function LoginPage() {
                 </h1>
                 <p className="text-gray-600">Sign in to your account</p>
               </motion.div>
-
               <motion.form
                 onSubmit={handleSubmit}
                 className="space-y-6"
@@ -112,7 +105,6 @@ export default function LoginPage() {
                     required
                   />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
                   <div className="relative">
@@ -142,7 +134,6 @@ export default function LoginPage() {
                     </motion.button>
                   </div>
                 </div>
-
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -164,7 +155,6 @@ export default function LoginPage() {
                     Forgot password?
                   </motion.a>
                 </div>
-
                 <motion.div
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -176,7 +166,6 @@ export default function LoginPage() {
                     Sign In
                   </Button>
                 </motion.div>
-
                 <motion.div
                   className="text-center"
                   initial={{ opacity: 0 }}
@@ -198,7 +187,6 @@ export default function LoginPage() {
               </motion.form>
             </Card>
           </motion.div>
-
           <motion.div
             className="order-1 lg:order-2"
             initial={{ opacity: 0, x: 50 }}

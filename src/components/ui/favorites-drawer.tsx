@@ -1,83 +1,71 @@
 "use client";
-
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Heart, ShoppingCart, Trash2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { useState } from "react";
-
-interface FavoriteItem {
-  id: number;
-  name: string;
-  price: number;
-  image: string;
-  rating: number;
-  brand: string;
-  originalPrice?: number;
-  inStock: boolean;
-}
-
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "@/redux/store";
+import {
+  removeFromFavorites,
+  setFavoritesOpen,
+  type FavoriteItem,
+} from "@/redux/slices/favoritesSlice";
+import { addToCart } from "@/redux/slices/cartSlice";
+import Link from "next/link";
+import { toast } from "sonner";
 interface FavoritesDrawerProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-// Dummy favorites data - replace with actual favorites state later
-const dummyFavoriteItems: FavoriteItem[] = [
-  {
-    id: 1,
-    name: "Premium Wireless Earbuds",
-    price: 159.99,
-    originalPrice: 199.99,
-    image: "/vercel.svg",
-    rating: 4.8,
-    brand: "TechAudio",
-    inStock: true,
-  },
-  {
-    id: 2,
-    name: "Smart Fitness Tracker",
-    price: 89.99,
-    image: "/vercel.svg",
-    rating: 4.5,
-    brand: "FitTech",
-    inStock: true,
-  },
-  {
-    id: 3,
-    name: "Portable Bluetooth Speaker",
-    price: 129.99,
-    originalPrice: 149.99,
-    image: "/vercel.svg",
-    rating: 4.7,
-    brand: "SoundWave",
-    inStock: false,
-  },
-  {
-    id: 4,
-    name: "Wireless Charging Pad",
-    price: 39.99,
-    image: "/vercel.svg",
-    rating: 4.3,
-    brand: "PowerTech",
-    inStock: true,
-  },
-];
-
 export function FavoritesDrawer({ isOpen, onClose }: FavoritesDrawerProps) {
-  const [favoriteItems, setFavoriteItems] =
-    useState<FavoriteItem[]>(dummyFavoriteItems);
-
-  const removeFromFavorites = (id: number) => {
-    setFavoriteItems((items) => items.filter((item) => item.id !== id));
+  const dispatch = useDispatch();
+  const { items: favoriteItems, totalItems } = useSelector(
+    (state: RootState) => state.favorites
+  );
+  const handleRemoveFromFavorites = (id: string) => {
+    const item = favoriteItems.find((item) => item.id === id);
+    dispatch(removeFromFavorites(id));
+    if (item) {
+      toast.success(`${item.title} removed from favorites`, {
+        description: `${item.title} has been removed from your favorites.`,
+        duration: 3000,
+      });
+    }
   };
-
-  const addToCart = (item: FavoriteItem) => {
-    // Handle add to cart functionality
-    console.log("Adding to cart:", item.name);
-    // You can integrate with your cart state here
+  const handleAddToCart = (item: FavoriteItem) => {
+    dispatch(
+      addToCart({
+        productData: item.productData,
+        quantity: 1,
+      })
+    );
+    toast.success(`${item.title} added to cart!`, {
+      description: `${item.title} has been added to your cart.`,
+      duration: 3000,
+    });
   };
-
+  const handleAddAllToCart = () => {
+    const availableItems = favoriteItems.filter((item) => item.stock > 0);
+    availableItems.forEach((item) => {
+      dispatch(
+        addToCart({
+          productData: item.productData,
+          quantity: 1,
+        })
+      );
+    });
+    if (availableItems.length > 0) {
+      toast.success(`${availableItems.length} items added to cart!`, {
+        description: `All available favorite items have been added to your cart.`,
+        duration: 3000,
+      });
+    } else {
+      toast.error("No items available to add to cart", {
+        description: "All favorite items are out of stock.",
+        duration: 3000,
+      });
+    }
+  };
   const renderStars = (rating: number) => {
     return (
       <div className="flex items-center space-x-1">
@@ -85,9 +73,7 @@ export function FavoritesDrawer({ isOpen, onClose }: FavoritesDrawerProps) {
           <Star
             key={star}
             className={`w-3 h-3 ${
-              star <= rating
-                ? "fill-yellow-400 text-yellow-400"
-                : "text-gray-300"
+              star <= rating ? "text-yellow-400 fill-current" : "text-gray-300"
             }`}
           />
         ))}
@@ -95,14 +81,12 @@ export function FavoritesDrawer({ isOpen, onClose }: FavoritesDrawerProps) {
       </div>
     );
   };
-
   return (
     <>
-      {/* Backdrop */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="fixed inset-0 bg-black bg-opacity-50 z-50"
+            className="fixed inset-0 bg-black bg-opacity-50 z-[9999]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -110,167 +94,142 @@ export function FavoritesDrawer({ isOpen, onClose }: FavoritesDrawerProps) {
           />
         )}
       </AnimatePresence>
-
-      {/* Drawer */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-xl z-50 flex flex-col"
+            className="fixed right-0 top-0 h-full w-96 bg-white shadow-2xl z-[9999] flex flex-col"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
           >
-            {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <div className="flex items-center space-x-2">
-                <Heart className="w-5 h-5 text-red-500 fill-red-500" />
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Favorites ({favoriteItems.length})
-                </h2>
-              </div>
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                <Heart className="w-5 h-5 mr-2 text-red-500" />
+                Favorites ({totalItems})
+              </h2>
               <motion.button
+                onClick={onClose}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-full"
               >
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-5 h-5" />
               </motion.button>
             </div>
-
-            {/* Favorite Items */}
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto">
               {favoriteItems.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-center">
+                <div className="flex flex-col items-center justify-center h-full p-8 text-center">
                   <Heart className="w-16 h-16 text-gray-300 mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
                     No favorites yet
                   </h3>
                   <p className="text-gray-500 mb-6">
-                    Add products to your favorites to see them here
+                    Save products you love to see them here
                   </p>
                   <Button
                     onClick={onClose}
-                    className="bg-orange-500 hover:bg-orange-600"
+                    className="bg-orange-500 hover:bg-orange-600 text-white"
                   >
-                    Continue Shopping
+                    Start Shopping
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {favoriteItems.map((item) => (
-                    <motion.div
-                      key={item.id}
-                      layout
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      className="relative bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors"
+                <div className="p-4">
+                  <div className="mb-4">
+                    <Button
+                      onClick={handleAddAllToCart}
+                      className="w-full bg-orange-500 hover:bg-orange-600 text-white flex items-center justify-center"
+                      disabled={favoriteItems.every((item) => item.stock === 0)}
                     >
-                      <div className="flex space-x-3">
-                        <div className="relative w-20 h-20 bg-white rounded-md overflow-hidden flex-shrink-0">
-                          <Image
-                            src={item.image}
-                            alt={item.name}
-                            fill
-                            className="object-cover"
-                          />
-                          {!item.inStock && (
-                            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                              <span className="text-white text-xs font-medium">
-                                Out of Stock
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-start mb-1">
-                            <h4 className="text-sm font-medium text-gray-900 truncate pr-2">
-                              {item.name}
-                            </h4>
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => removeFromFavorites(item.id)}
-                              className="p-1 hover:bg-red-100 rounded flex-shrink-0"
-                            >
-                              <Trash2 className="w-4 h-4 text-red-500" />
-                            </motion.button>
+                      <ShoppingCart className="w-4 h-4 mr-2" />
+                      Add All to Cart
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    {favoriteItems.map((item, index) => (
+                      <motion.div
+                        key={item.id}
+                        className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="w-20 h-20 bg-gray-100 rounded overflow-hidden">
+                            <Image
+                              src={item.image}
+                              alt={item.title}
+                              width={80}
+                              height={80}
+                              className="object-cover w-full h-full"
+                            />
                           </div>
-
-                          <p className="text-xs text-gray-500 mb-2">
-                            {item.brand}
-                          </p>
-
-                          {renderStars(item.rating)}
-
-                          <div className="flex items-center justify-between mt-2">
-                            <div className="flex items-center space-x-2">
-                              <span className="text-sm font-semibold text-orange-600">
-                                ${item.price.toFixed(2)}
-                              </span>
-                              {item.originalPrice && (
-                                <span className="text-xs text-gray-400 line-through">
-                                  ${item.originalPrice.toFixed(2)}
+                          <div className="flex-1 min-w-0">
+                            <Link
+                              href={`/products/${item.slug}`}
+                              className="text-sm font-medium text-gray-900 hover:text-orange-600 transition-colors block"
+                              onClick={onClose}
+                            >
+                              {item.title}
+                            </Link>
+                            <p className="text-xs text-gray-500 mb-2">
+                              {item.brand}
+                            </p>
+                            {renderStars(item.rating)}
+                            <div className="flex items-center justify-between mt-2">
+                              <div className="flex items-center space-x-2">
+                                <span className="text-sm font-semibold text-orange-600">
+                                  ৳{item.price.toFixed(2)}
                                 </span>
-                              )}
+                                {item.originalPrice && (
+                                  <span className="text-xs text-gray-400 line-through">
+                                    ৳{item.originalPrice.toFixed(2)}
+                                  </span>
+                                )}
+                              </div>
+                              <div
+                                className={`flex items-center space-x-1 px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                                  item.stock > 0
+                                    ? "bg-green-100 text-green-800"
+                                    : "bg-red-100 text-red-800"
+                                }`}
+                              >
+                                <span>
+                                  {item.stock > 0 ? "In Stock" : "Out of Stock"}
+                                </span>
+                              </div>
                             </div>
-
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => addToCart(item)}
-                              disabled={!item.inStock}
-                              className={`flex items-center space-x-1 px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-                                item.inStock
-                                  ? "bg-orange-500 hover:bg-orange-600 text-white"
-                                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                              }`}
-                            >
-                              <ShoppingCart className="w-3 h-3" />
-                              <span>
-                                {item.inStock ? "Add to Cart" : "Out of Stock"}
-                              </span>
-                            </motion.button>
+                            <div className="flex items-center space-x-2 mt-3">
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleAddToCart(item)}
+                                disabled={item.stock === 0}
+                                className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white text-xs py-2 px-3 rounded-md transition-colors flex items-center justify-center"
+                              >
+                                <ShoppingCart className="w-3 h-3 mr-1" />
+                                Add to Cart
+                              </motion.button>
+                              <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() =>
+                                  handleRemoveFromFavorites(item.id)
+                                }
+                                className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </motion.button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </motion.div>
-                  ))}
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
-
-            {/* Footer */}
-            {favoriteItems.length > 0 && (
-              <div className="border-t border-gray-200 p-4 bg-gray-50">
-                <div className="space-y-2">
-                  <Button
-                    className="w-full bg-orange-500 hover:bg-orange-600 text-white"
-                    onClick={() => {
-                      // Handle move all to cart
-                      const inStockItems = favoriteItems.filter(
-                        (item) => item.inStock
-                      );
-                      console.log("Moving to cart:", inStockItems);
-                      // You can integrate with your cart state here
-                    }}
-                  >
-                    Add All to Cart (
-                    {favoriteItems.filter((item) => item.inStock).length} items)
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={onClose}
-                  >
-                    Continue Shopping
-                  </Button>
-                </div>
-              </div>
-            )}
           </motion.div>
         )}
       </AnimatePresence>

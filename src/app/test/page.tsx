@@ -7,7 +7,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
 export default function TestPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -15,7 +14,6 @@ export default function TestPage() {
         <h1 className="text-3xl font-bold text-center mb-8 text-gray-900">
           Test Page - Styling Verification
         </h1>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
@@ -36,7 +34,6 @@ export default function TestPage() {
               </div>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader>
               <CardTitle>Component Test</CardTitle>
@@ -60,7 +57,6 @@ export default function TestPage() {
             </CardContent>
           </Card>
         </div>
-
         <div className="mt-8 text-center">
           <p className="text-gray-600">
             If you can see all the styling above, your Next.js app is working

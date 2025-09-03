@@ -1,5 +1,4 @@
 "use client";
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +12,6 @@ import {
   deleteCategory,
 } from "@/redux/slices/productsSlice";
 import { toast } from "sonner";
-
 export default function CategoriesPage() {
   const dispatch = useDispatch<AppDispatch>();
   const {
@@ -24,7 +22,6 @@ export default function CategoriesPage() {
     lastFetched,
   } = useSelector((state: RootState) => state.products);
   const userToken = useSelector((s: RootState) => s.user.userData.token);
-
   const [query, setQuery] = React.useState("");
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [form, setForm] = React.useState({
@@ -32,8 +29,6 @@ export default function CategoriesPage() {
   });
   const [formError, setFormError] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
-
-  // Edit modal state
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [editingCategoryId, setEditingCategoryId] = React.useState<
     number | null
@@ -41,20 +36,16 @@ export default function CategoriesPage() {
   const [editForm, setEditForm] = React.useState({
     name: "",
   });
-
   React.useEffect(() => {
-    // Only fetch if categories are empty, not loading, and haven't been fetched recently (5 minutes)
     const shouldFetch =
       categories.length === 0 &&
       !categoriesLoading &&
       (!lastFetched.categories ||
         Date.now() - lastFetched.categories > 5 * 60 * 1000);
-
     if (shouldFetch) {
       dispatch(fetchCategories());
     }
   }, [dispatch, categories.length, categoriesLoading, lastFetched.categories]);
-
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return categories;
@@ -62,7 +53,6 @@ export default function CategoriesPage() {
       [c.name, c.slug].some((f) => f?.toLowerCase().includes(q))
     );
   }, [categories, query]);
-
   const openEdit = (category: any) => {
     setIsEditOpen(true);
     setEditingCategoryId(category.id);
@@ -70,23 +60,20 @@ export default function CategoriesPage() {
       name: category.name || "",
     });
   };
-
   const handleDelete = async (id: number) => {
     if (!confirm("Are you sure you want to delete this category?")) {
       return;
     }
-
     try {
       const result = await dispatch(
         deleteCategory({ id, token: userToken }) as any
       ).unwrap();
       toast.success(result?.message || "Category deleted successfully");
-      dispatch(fetchCategories()); // Refresh the list
+      dispatch(fetchCategories());
     } catch (err: any) {
       toast.error(err || "Failed to delete category");
     }
   };
-
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -101,7 +88,6 @@ export default function CategoriesPage() {
           <Button onClick={() => setIsModalOpen(true)}>Add Category</Button>
         </div>
       </div>
-
       <Card className="p-0 overflow-hidden">
         <div className="grid grid-cols-12 px-4 py-2 text-xs font-medium text-gray-500 bg-gray-50">
           <div className="col-span-6">Name</div>
@@ -153,10 +139,8 @@ export default function CategoriesPage() {
           )}
         </div>
       </Card>
-
-      {/* Add Category Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Add Category</h3>
@@ -167,23 +151,19 @@ export default function CategoriesPage() {
                 ✕
               </button>
             </div>
-
             {formError && (
               <div className="mb-3 text-sm text-red-600">{formError}</div>
             )}
-
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
                 setFormError(null);
-
                 if (!form.name.trim()) {
                   return setFormError("Name is required");
                 }
                 if (!userToken) {
                   return setFormError("You must be logged in");
                 }
-
                 try {
                   setSubmitting(true);
                   const result = await dispatch(
@@ -192,7 +172,6 @@ export default function CategoriesPage() {
                       token: userToken,
                     }) as any
                   ).unwrap();
-
                   toast.success(
                     result?.message || "Category created successfully"
                   );
@@ -213,7 +192,6 @@ export default function CategoriesPage() {
                 value={form.name}
                 onChange={(e) => setForm({ name: e.target.value })}
               />
-
               <div className="flex items-center justify-end gap-2 pt-2">
                 <Button
                   type="button"
@@ -230,10 +208,8 @@ export default function CategoriesPage() {
           </div>
         </div>
       )}
-
-      {/* Edit Category Modal */}
       {isEditOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Edit Category</h3>
@@ -244,17 +220,14 @@ export default function CategoriesPage() {
                 ✕
               </button>
             </div>
-
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
-
                 if (!editForm.name.trim()) {
                   toast.error("Name is required");
                   return;
                 }
                 if (!editingCategoryId) return;
-
                 try {
                   const result = await dispatch(
                     updateCategory({
@@ -263,7 +236,6 @@ export default function CategoriesPage() {
                       token: userToken,
                     }) as any
                   ).unwrap();
-
                   toast.success(
                     result?.message || "Category updated successfully"
                   );
@@ -280,7 +252,6 @@ export default function CategoriesPage() {
                 value={editForm.name}
                 onChange={(e) => setEditForm({ name: e.target.value })}
               />
-
               <div className="flex items-center justify-end gap-2 pt-2">
                 <Button
                   type="button"

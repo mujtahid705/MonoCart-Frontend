@@ -1,5 +1,4 @@
 "use client";
-
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/products/product-card";
@@ -9,7 +8,6 @@ import React from "react";
 import { useDispatch } from "react-redux";
 import type { AppDispatch } from "@/redux/store";
 import { fetchAllProducts } from "@/redux/slices/productsSlice";
-
 type CardProduct = {
   id: string;
   name: string;
@@ -19,7 +17,6 @@ type CardProduct = {
   reviews: number;
   image: string;
 };
-
 export function ProductsSection() {
   const dispatch = useDispatch<AppDispatch>();
   const [gadgets, setGadgets] = React.useState<CardProduct[]>([]);
@@ -29,7 +26,6 @@ export function ProductsSection() {
     g: string | null;
     w: string | null;
   }>({ g: null, w: null });
-
   React.useEffect(() => {
     let active = true;
     const mapToCard = (items: any[]): CardProduct[] =>
@@ -42,7 +38,6 @@ export function ProductsSection() {
         reviews: 0,
         image: p.images?.[0]?.url || "/vercel.svg",
       }));
-
     (async () => {
       try {
         const g = await dispatch(fetchAllProducts({ category: 2 })).unwrap();
@@ -65,10 +60,8 @@ export function ProductsSection() {
       active = false;
     };
   }, [dispatch]);
-
   return (
     <>
-      {/* Gadgets */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -88,7 +81,6 @@ export function ProductsSection() {
               <Button variant="outline">View All</Button>
             </Link>
           </motion.div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
             {loading.g && (
               <div className="col-span-full text-sm text-gray-500">
@@ -114,8 +106,6 @@ export function ProductsSection() {
           </div>
         </div>
       </section>
-
-      {/* Women's Collection Banner */}
       <section className="py-16 bg-gradient-to-r from-orange-400 to-yellow-400">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -139,7 +129,6 @@ export function ProductsSection() {
                 </div>
               </div>
             </motion.div>
-
             <motion.div
               className="order-1 lg:order-2 text-white space-y-6"
               initial={{ opacity: 0, x: 50 }}
@@ -172,8 +161,6 @@ export function ProductsSection() {
           </div>
         </div>
       </section>
-
-      {/* Clothings */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div>

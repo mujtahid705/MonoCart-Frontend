@@ -1,5 +1,4 @@
 "use client";
-
 import { motion } from "framer-motion";
 import {
   Search,
@@ -9,6 +8,7 @@ import {
   Menu,
   LogOut,
   UserCircle,
+  LayoutDashboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,38 +25,42 @@ import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
 import { logout, initializeAuth } from "@/redux/slices/userSlice";
+import { initializeCart, toggleCart } from "@/redux/slices/cartSlice";
+import {
+  initializeFavorites,
+  toggleFavorites,
+} from "@/redux/slices/favoritesSlice";
 import Image from "next/image";
-
 export function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useDispatch();
   const [mounted, setMounted] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
-
   const { isLoggedIn, userData } = useSelector(
     (state: RootState) => state.user
   );
-
+  const { totalItems: cartItems, isOpen: isCartOpen } = useSelector(
+    (state: RootState) => state.cart
+  );
+  const { totalItems: favoriteItems, isOpen: isFavoritesOpen } = useSelector(
+    (state: RootState) => state.favorites
+  );
   useEffect(() => {
     setMounted(true);
     dispatch(initializeAuth());
+    dispatch(initializeCart());
+    dispatch(initializeFavorites());
   }, [dispatch]);
-
   const handleLogout = () => {
     dispatch(logout());
     router.push("/");
   };
-
   const handleCartClick = () => {
-    setIsCartOpen(true);
+    dispatch(toggleCart());
   };
-
   const handleFavoritesClick = () => {
-    setIsFavoritesOpen(true);
+    dispatch(toggleFavorites());
   };
-
   return (
     <>
       <motion.header
@@ -81,18 +85,12 @@ export function Header() {
                 />
               </Link>
             </motion.div>
-
             <nav className="hidden md:flex space-x-8">
               {[
                 { name: "Home", href: "/" },
                 { name: "Shop", href: "/products" },
                 { name: "About", href: "/about" },
                 { name: "Contact", href: "/contact" },
-                // Conditionally add Dashboard for admin/superAdmin
-                ...(isLoggedIn &&
-                (userData.role === "admin" || userData.role === "superAdmin")
-                  ? [{ name: "Dashboard", href: "/dashboard" }]
-                  : []),
               ].map((item) => (
                 <motion.div key={item.name}>
                   <Link
@@ -106,7 +104,6 @@ export function Header() {
                 </motion.div>
               ))}
             </nav>
-
             <div className="flex items-center space-x-4">
               <div className="hidden md:flex items-center space-x-2 bg-gray-100 rounded-full px-4 py-2 max-w-md">
                 <Search className="w-4 h-4 text-gray-400" />
@@ -115,18 +112,17 @@ export function Header() {
                   className="border-0 bg-transparent focus:ring-0 text-sm"
                 />
               </div>
-
               <div className="flex items-center space-x-2">
                 {[
                   {
                     Icon: Heart,
-                    count: "2",
+                    count: favoriteItems.toString(),
                     href: null,
                     onClick: handleFavoritesClick,
                   },
                   {
                     Icon: ShoppingCart,
-                    count: "3",
+                    count: cartItems.toString(),
                     href: null,
                     onClick: handleCartClick,
                   },
@@ -160,7 +156,6 @@ export function Header() {
                     )}
                   </motion.div>
                 ))}
-
                 <motion.div
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
@@ -176,17 +171,35 @@ export function Header() {
                     >
                       <div className="px-4 py-2 border-b border-gray-100">
                         <p className="text-sm font-medium text-gray-900">
-                          {userData.name}
+                          {userData?.name || "User"}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {userData.email}
+                          {userData?.email || ""}
                         </p>
                       </div>
-                      <DropdownMenuItem onClick={() => router.push("/profile")}>
-                        <UserCircle className="w-4 h-4 mr-2" />
-                        Profile
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
+                      {userData?.role === "user" && (
+                        <>
+                          <Link href="/profile">
+                            <DropdownMenuItem>
+                              <UserCircle className="w-4 h-4 mr-2" />
+                              Profile
+                            </DropdownMenuItem>
+                          </Link>
+                          <DropdownMenuSeparator />
+                        </>
+                      )}
+                      {(userData?.role === "admin" ||
+                        userData?.role === "superAdmin") && (
+                        <>
+                          <Link href="/dashboard">
+                            <DropdownMenuItem>
+                              <LayoutDashboard className="w-4 h-4 mr-2" />
+                              Dashboard
+                            </DropdownMenuItem>
+                          </Link>
+                          <DropdownMenuSeparator />
+                        </>
+                      )}
                       <DropdownMenuItem onClick={handleLogout}>
                         <LogOut className="w-4 h-4 mr-2" />
                         Logout
@@ -201,7 +214,6 @@ export function Header() {
                   )}
                 </motion.div>
               </div>
-
               <motion.div className="md:hidden" whileTap={{ scale: 0.9 }}>
                 <Button variant="ghost" size="sm">
                   <Menu className="w-5 h-5" />
@@ -211,14 +223,10 @@ export function Header() {
           </div>
         </div>
       </motion.header>
-
-      {/* Cart Drawer */}
-      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-
-      {/* Favorites Drawer */}
+      <CartDrawer isOpen={isCartOpen} onClose={() => dispatch(toggleCart())} />
       <FavoritesDrawer
         isOpen={isFavoritesOpen}
-        onClose={() => setIsFavoritesOpen(false)}
+        onClose={() => dispatch(toggleFavorites())}
       />
     </>
   );

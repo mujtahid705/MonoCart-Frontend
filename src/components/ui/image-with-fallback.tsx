@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
-
 interface ImageWithFallbackProps {
   src: string;
   alt: string;
@@ -10,7 +9,6 @@ interface ImageWithFallbackProps {
   height?: number;
   fill?: boolean;
 }
-
 export function ImageWithFallback({
   src,
   alt,
@@ -22,20 +20,16 @@ export function ImageWithFallback({
 }: ImageWithFallbackProps) {
   const [imgSrc, setImgSrc] = useState(src);
   const [hasError, setHasError] = useState(false);
-
-  // Reset image when the src prop changes (e.g., user selects another thumbnail)
   useEffect(() => {
     setImgSrc(src);
     setHasError(false);
   }, [src]);
-
   const handleError = () => {
     if (!hasError) {
       setImgSrc(fallbackSrc);
       setHasError(true);
     }
   };
-
   return (
     <Image
       src={imgSrc}

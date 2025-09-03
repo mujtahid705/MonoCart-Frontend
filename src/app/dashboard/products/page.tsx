@@ -1,5 +1,4 @@
 "use client";
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,10 +16,9 @@ import {
 } from "@/redux/slices/productsSlice";
 import { useSelector as useReduxSelector } from "react-redux";
 import { toast } from "sonner";
-
-// Utility function to handle unauthorized responses
 const handleUnauthorized = (status: number, message?: string) => {
   if (status === 401 || message?.toLowerCase().includes("unauthorized")) {
+    console.log("401 Unauthorized in products page:", { status, message });
     if (typeof window !== "undefined") {
       localStorage.removeItem("token");
       localStorage.removeItem("role");
@@ -29,8 +27,6 @@ const handleUnauthorized = (status: number, message?: string) => {
     }
   }
 };
-
-// Minimal type reflecting only fields we will show
 type Product = {
   id: string;
   title: string;
@@ -40,7 +36,6 @@ type Product = {
   brand: string;
   images: { url: string }[];
 };
-
 export default function ProductsPage() {
   const dispatch = useDispatch<AppDispatch>();
   const {
@@ -55,7 +50,6 @@ export default function ProductsPage() {
     updating,
     lastFetched,
   } = useSelector((state: RootState) => state.products);
-
   const userToken = useReduxSelector((s: RootState) => s.user.userData.token);
   const [query, setQuery] = React.useState("");
   const [isModalOpen, setIsModalOpen] = React.useState(false);
@@ -74,14 +68,11 @@ export default function ProductsPage() {
   });
   const [formError, setFormError] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
-
   React.useEffect(() => {
     if (selectedCategoryId) {
       dispatch(fetchSubcategories(selectedCategoryId));
     }
   }, [selectedCategoryId, dispatch]);
-
-  // Edit modal state
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [editingProductId, setEditingProductId] = React.useState<string | null>(
     null
@@ -99,37 +90,13 @@ export default function ProductsPage() {
     categoryId: "",
     subCategoryId: "",
   });
-
   React.useEffect(() => {
-    // Only fetch if data arrays are empty, not loading, and haven't been fetched recently
-    const shouldFetchProducts =
-      products.length === 0 &&
-      !loading &&
-      (!lastFetched.products ||
-        Date.now() - lastFetched.products > 1 * 60 * 1000); // 1 minute for products
+    dispatch(fetchAllProducts());
 
-    const shouldFetchCategories =
-      categories.length === 0 &&
-      !categoriesLoading &&
-      (!lastFetched.categories ||
-        Date.now() - lastFetched.categories > 5 * 60 * 1000);
-
-    if (shouldFetchProducts) {
-      dispatch(fetchAllProducts());
-    }
-    if (shouldFetchCategories) {
+    if (categories.length === 0) {
       dispatch(fetchCategories());
     }
-  }, [
-    dispatch,
-    products.length,
-    loading,
-    categories.length,
-    categoriesLoading,
-    lastFetched.products,
-    lastFetched.categories,
-  ]);
-
+  }, [dispatch]);
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return products;
@@ -164,11 +131,9 @@ export default function ProductsPage() {
       setEditLoading(false);
     }
   };
-
   const totalEditImages =
     editForm.existingImages.length + editForm.newImages.length;
   const canAddMoreEditImages = totalEditImages < 5;
-
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -183,7 +148,6 @@ export default function ProductsPage() {
           <Button onClick={() => setIsModalOpen(true)}>Add Product</Button>
         </div>
       </div>
-
       <Card className="p-0 overflow-hidden">
         <div className="grid grid-cols-12 px-4 py-2 text-xs font-medium text-gray-500 bg-gray-50">
           <div className="col-span-5 sm:col-span-6">Product</div>
@@ -251,7 +215,6 @@ export default function ProductsPage() {
                           onClick={async (e) => {
                             e.preventDefault();
                             e.stopPropagation();
-
                             if (
                               !confirm(
                                 "Are you sure you want to delete this product?"
@@ -259,7 +222,6 @@ export default function ProductsPage() {
                             ) {
                               return;
                             }
-
                             try {
                               const res = await fetch(
                                 `${process.env.NEXT_PUBLIC_BASE_URL}/products/${p.id}`,
@@ -270,20 +232,17 @@ export default function ProductsPage() {
                                   },
                                 }
                               );
-
                               const data = await res.json().catch(() => ({}));
-
                               if (!res.ok) {
                                 handleUnauthorized(res.status, data?.message);
                                 throw new Error(
                                   data?.message || "Failed to delete product"
                                 );
                               }
-
                               toast.success(
                                 data?.message || "Product deleted successfully"
                               );
-                              dispatch(fetchAllProducts()); // Refresh the list
+                              dispatch(fetchAllProducts());
                             } catch (err: any) {
                               toast.error(
                                 err.message || "Failed to delete product"
@@ -303,9 +262,8 @@ export default function ProductsPage() {
           )}
         </div>
       </Card>
-
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Add Product</h3>
@@ -316,16 +274,13 @@ export default function ProductsPage() {
                 ✕
               </button>
             </div>
-
             {formError && (
               <div className="mb-3 text-sm text-red-600">{formError}</div>
             )}
-
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
                 setFormError(null);
-
                 if (!form.title.trim())
                   return setFormError("Title is required");
                 if (!form.description.trim())
@@ -339,7 +294,6 @@ export default function ProductsPage() {
                 if (!form.categoryId)
                   return setFormError("Category is required");
                 if (!userToken) return setFormError("You must be logged in");
-
                 try {
                   setSubmitting(true);
                   const fd = new FormData();
@@ -352,7 +306,6 @@ export default function ProductsPage() {
                   if (form.subCategoryId)
                     fd.append("subCategoryId", String(form.subCategoryId));
                   form.images.forEach((file) => fd.append("images", file));
-
                   const res = await fetch(
                     `${process.env.NEXT_PUBLIC_BASE_URL}/products/create`,
                     {
@@ -367,7 +320,6 @@ export default function ProductsPage() {
                     const err = await res.json().catch(() => ({}));
                     throw new Error(err?.message || "Failed to create product");
                   }
-
                   toast.success("Product created successfully");
                   setIsModalOpen(false);
                   setForm({
@@ -502,7 +454,6 @@ export default function ProductsPage() {
                   <div className="text-xs text-red-600">{categoriesError}</div>
                 )}
               </div>
-
               <div className="flex items-center justify-end gap-2 pt-2">
                 <Button
                   type="button"
@@ -519,9 +470,8 @@ export default function ProductsPage() {
           </div>
         </div>
       )}
-
       {isEditOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Edit Product</h3>
@@ -533,11 +483,9 @@ export default function ProductsPage() {
                 ✕
               </button>
             </div>
-
             {editError && (
               <div className="mb-3 text-sm text-red-600">{editError}</div>
             )}
-
             {editLoading ? (
               <div className="p-6 text-sm text-gray-500">Loading...</div>
             ) : (
@@ -641,8 +589,6 @@ export default function ProductsPage() {
                         </option>
                       ))}
                   </select>
-
-                  {/* Existing images */}
                   <div>
                     <div className="mb-2 text-sm font-medium text-gray-700">
                       Current Images ({editForm.existingImages.length})
@@ -678,8 +624,6 @@ export default function ProductsPage() {
                       ))}
                     </div>
                   </div>
-
-                  {/* New images */}
                   <div>
                     <div className="mb-2 text-sm font-medium text-gray-700">
                       Add Images (max 5)
@@ -698,7 +642,7 @@ export default function ProductsPage() {
                           ...s,
                           newImages: [...s.newImages, ...toAdd],
                         }));
-                        e.currentTarget.value = ""; // reset input
+                        e.currentTarget.value = "";
                       }}
                       className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100 disabled:opacity-60"
                     />
@@ -739,7 +683,6 @@ export default function ProductsPage() {
                     )}
                   </div>
                 </div>
-
                 <div className="flex items-center justify-end gap-2 pt-2">
                   <Button
                     type="button"

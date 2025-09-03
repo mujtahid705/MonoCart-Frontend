@@ -1,10 +1,8 @@
 "use client";
-
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
-
 const categories = [
   {
     name: "Clothing",
@@ -47,7 +45,6 @@ const categories = [
     href: "/products?category=shoes",
   },
 ];
-
 export function CategoriesSection() {
   return (
     <section className="py-20 bg-gradient-to-br from-gray-50 to-white">
@@ -78,7 +75,6 @@ export function CategoriesSection() {
             and preferences
           </p>
         </motion.div>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {categories.map((category, index) => (
             <motion.div
@@ -104,7 +100,6 @@ export function CategoriesSection() {
                 <div
                   className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500 z-0`}
                 />
-
                 <div className="relative z-10 p-8 text-center">
                   <motion.div
                     className={`w-20 h-20 mx-auto mb-6 ${category.bgColor} rounded-2xl flex items-center justify-center relative z-10 overflow-hidden group-hover:scale-110 transition-transform duration-300`}
@@ -113,14 +108,11 @@ export function CategoriesSection() {
                     <div
                       className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-0 group-hover:opacity-20 transition-opacity duration-300`}
                     />
-
                     <span className="text-3xl relative z-10 group-hover:scale-110 transition-transform duration-300">
                       {category.icon}
                     </span>
-
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20 transform -translate-x-full group-hover:translate-x-full transition-all duration-700" />
                   </motion.div>
-
                   <div className="space-y-2">
                     <h3 className="text-xl font-bold text-gray-900 group-hover:text-orange-600 transition-colors duration-300">
                       {category.name}
@@ -133,7 +125,6 @@ export function CategoriesSection() {
                     </p>
                     <p className="text-sm text-gray-500">Products Available</p>
                   </div>
-
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     whileInView={{ opacity: 0, y: 10 }}
@@ -151,14 +142,12 @@ export function CategoriesSection() {
                     </Link>
                   </motion.div>
                 </div>
-
                 <div className="absolute top-4 right-4 w-2 h-2 bg-orange-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="absolute bottom-4 left-4 w-1 h-1 bg-orange-300 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100" />
               </Card>
             </motion.div>
           ))}
         </div>
-
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}

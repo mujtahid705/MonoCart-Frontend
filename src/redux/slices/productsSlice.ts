@@ -1,8 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-
-// Utility function to handle unauthorized responses
 const handleUnauthorized = (status: number, message?: string) => {
   if (status === 401 || message?.toLowerCase().includes("unauthorized")) {
+    console.log("401 Unauthorized in productsSlice:", { status, message });
     if (typeof window !== "undefined") {
       localStorage.removeItem("token");
       localStorage.removeItem("role");
@@ -11,7 +10,6 @@ const handleUnauthorized = (status: number, message?: string) => {
     }
   }
 };
-
 export type Product = {
   id: string;
   title: string;
@@ -24,13 +22,11 @@ export type Product = {
   categoryId?: string | number;
   subCategoryId?: string | number;
 };
-
 export type Category = {
   id: number;
   name: string;
   slug: string;
 };
-
 export type SubCategory = {
   id: number;
   name: string;
@@ -42,7 +38,6 @@ export type SubCategory = {
     slug: string;
   };
 };
-
 interface ProductsState {
   items: Product[];
   loading: boolean;
@@ -58,14 +53,12 @@ interface ProductsState {
   subcategoriesError: string | null;
   updating: boolean;
   updateError: string | null;
-  // Add cache timestamps
   lastFetched: {
     products: number | null;
     categories: number | null;
     subcategories: number | null;
   };
 }
-
 const initialState: ProductsState = {
   items: [],
   loading: false,
@@ -87,7 +80,6 @@ const initialState: ProductsState = {
     subcategories: null,
   },
 };
-
 export const fetchAllProducts = createAsyncThunk(
   "products/fetchAll",
   async (filters?: {
@@ -105,37 +97,28 @@ export const fetchAllProducts = createAsyncThunk(
     }
     const qs = params.toString();
     const url = `${base}/products/all${qs ? `?${qs}` : ""}`;
-
     console.log("🔍 Fetching products from:", url);
-
     const res = await fetch(url, {
-      cache: "force-cache",
-      next: { revalidate: 60 }, // Cache for 60 seconds
+      cache: "no-cache",
     });
-
     if (!res.ok) {
       console.error("❌ Products API failed:", res.status, res.statusText);
       throw new Error(`Failed to fetch products: ${res.status}`);
     }
-
     const json = await res.json();
     console.log("📦 Raw API Response:", json);
-
-    // Check if products are directly in response or under 'data' property
     const list: any[] = json?.data ?? json ?? [];
     console.log("📋 Products list:", list);
     console.log("📊 Products count:", list.length);
-
     const isAbsolute = (u: string) => /^https?:\/\//i.test(u);
     const joinUrl = (root: string, path?: string) => {
       if (!path) return "/vercel.svg";
       if (isAbsolute(path)) return path;
-      if (!root) return path; // fallback to raw if no base
+      if (!root) return path;
       const r = root.endsWith("/") ? root.slice(0, -1) : root;
       const p = path.startsWith("/") ? path : `/${path}`;
       return `${r}${p}`;
     };
-
     const mappedProducts = list.map((p) => ({
       id: p.id,
       title: p.title,
@@ -156,12 +139,10 @@ export const fetchAllProducts = createAsyncThunk(
           })
         : [],
     })) as Product[];
-
     console.log("✅ Mapped products:", mappedProducts);
     return mappedProducts;
   }
 );
-
 export const fetchProductById = createAsyncThunk(
   "products/fetchById",
   async (id: string | number) => {
@@ -169,7 +150,7 @@ export const fetchProductById = createAsyncThunk(
     const imageBase = process.env.NEXT_PUBLIC_IMAGE_URL ?? "";
     const res = await fetch(`${base}/products/${id}`, {
       cache: "force-cache",
-      next: { revalidate: 30 }, // Cache individual products for 30 seconds
+      next: { revalidate: 30 },
     });
     if (!res.ok) {
       const msg = await res.text();
@@ -211,14 +192,12 @@ export const fetchProductById = createAsyncThunk(
     return product;
   }
 );
-
 export const fetchCategories = createAsyncThunk(
   "products/fetchCategories",
   async () => {
     const base = process.env.NEXT_PUBLIC_BASE_URL ?? "";
     const res = await fetch(`${base}/categories/all`, {
-      cache: "force-cache",
-      next: { revalidate: 300 }, // Cache categories for 5 minutes
+      cache: "no-cache",
     });
     if (!res.ok) throw new Error("Failed to load categories");
     const json = await res.json();
@@ -230,7 +209,6 @@ export const fetchCategories = createAsyncThunk(
     })) as Category[];
   }
 );
-
 export const fetchSubcategories = createAsyncThunk(
   "products/fetchSubcategories",
   async (categoryId: string | number) => {
@@ -240,8 +218,7 @@ export const fetchSubcategories = createAsyncThunk(
         String(categoryId)
       )}`,
       {
-        cache: "force-cache",
-        next: { revalidate: 300 }, // Cache subcategories for 5 minutes
+        cache: "no-cache",
       }
     );
     if (!res.ok) throw new Error("Failed to load subcategories");
@@ -255,14 +232,12 @@ export const fetchSubcategories = createAsyncThunk(
     })) as SubCategory[];
   }
 );
-
 export const fetchAllSubcategories = createAsyncThunk(
   "products/fetchAllSubcategories",
   async () => {
     const base = process.env.NEXT_PUBLIC_BASE_URL ?? "";
     const res = await fetch(`${base}/subcategories/all`, {
-      cache: "force-cache",
-      next: { revalidate: 300 }, // Cache subcategories for 5 minutes
+      cache: "no-cache",
     });
     if (!res.ok) throw new Error("Failed to load subcategories");
     const json = await res.json();
@@ -282,7 +257,6 @@ export const fetchAllSubcategories = createAsyncThunk(
     })) as SubCategory[];
   }
 );
-
 export const updateProduct = createAsyncThunk(
   "products/updateProduct",
   async (
@@ -296,8 +270,8 @@ export const updateProduct = createAsyncThunk(
         brand?: string;
         categoryId?: number | string;
         subCategoryId?: number | string;
-        existingImages?: string[]; // remaining image URLs
-        newImages?: File[]; // new files to upload
+        existingImages?: string[];
+        newImages?: File[];
       };
       token?: string;
     },
@@ -340,7 +314,6 @@ export const updateProduct = createAsyncThunk(
     return json?.data;
   }
 );
-
 export const createCategory = createAsyncThunk(
   "products/createCategory",
   async (payload: { name: string; token: string }, { rejectWithValue }) => {
@@ -362,7 +335,6 @@ export const createCategory = createAsyncThunk(
     return res.json();
   }
 );
-
 export const updateCategory = createAsyncThunk(
   "products/updateCategory",
   async (
@@ -387,7 +359,6 @@ export const updateCategory = createAsyncThunk(
     return res.json();
   }
 );
-
 export const deleteCategory = createAsyncThunk(
   "products/deleteCategory",
   async (payload: { id: number; token: string }, { rejectWithValue }) => {
@@ -407,7 +378,6 @@ export const deleteCategory = createAsyncThunk(
     return res.json();
   }
 );
-
 export const createSubcategory = createAsyncThunk(
   "products/createSubcategory",
   async (
@@ -432,7 +402,6 @@ export const createSubcategory = createAsyncThunk(
     return res.json();
   }
 );
-
 export const updateSubcategory = createAsyncThunk(
   "products/updateSubcategory",
   async (
@@ -457,7 +426,6 @@ export const updateSubcategory = createAsyncThunk(
     return res.json();
   }
 );
-
 export const deleteSubcategory = createAsyncThunk(
   "products/deleteSubcategory",
   async (payload: { id: number; token: string }, { rejectWithValue }) => {
@@ -477,7 +445,6 @@ export const deleteSubcategory = createAsyncThunk(
     return res.json();
   }
 );
-
 const productsSlice = createSlice({
   name: "products",
   initialState,
@@ -510,8 +477,6 @@ const productsSlice = createSlice({
         state.currentLoading = false;
         state.currentError = action.error.message || "Failed to load product";
       })
-
-      // categories
       .addCase(fetchCategories.pending, (state) => {
         state.categoriesLoading = true;
         state.categoriesError = null;
@@ -526,8 +491,6 @@ const productsSlice = createSlice({
         state.categoriesError =
           action.error.message || "Failed to load categories";
       })
-
-      // subcategories
       .addCase(fetchSubcategories.pending, (state) => {
         state.subcategoriesLoading = true;
         state.subcategoriesError = null;
@@ -556,7 +519,6 @@ const productsSlice = createSlice({
         state.subcategoriesError =
           action.error.message || "Failed to load subcategories";
       })
-      // update product
       .addCase(updateProduct.pending, (state) => {
         state.updating = true;
         state.updateError = null;
@@ -565,7 +527,6 @@ const productsSlice = createSlice({
         state.updating = false;
         const updated = action.payload;
         if (updated) {
-          // update in items array if exists
           const idx = state.items.findIndex(
             (p) => String(p.id) === String(updated.id)
           );
@@ -594,14 +555,12 @@ const productsSlice = createSlice({
         state.updateError =
           action.payload || action.error.message || "Failed to update product";
       })
-      // category CRUD
       .addCase(createCategory.pending, (state) => {
         state.updating = true;
         state.updateError = null;
       })
       .addCase(createCategory.fulfilled, (state, action) => {
         state.updating = false;
-        // Add the new category to the list if it's in the expected format
         if (action.payload?.data) {
           state.categories.push(action.payload.data);
         }
@@ -617,7 +576,6 @@ const productsSlice = createSlice({
       })
       .addCase(updateCategory.fulfilled, (state, action) => {
         state.updating = false;
-        // Update the category in the list
         if (action.payload?.data) {
           const idx = state.categories.findIndex(
             (c) => c.id === action.payload.data.id
@@ -638,7 +596,6 @@ const productsSlice = createSlice({
       })
       .addCase(deleteCategory.fulfilled, (state, action) => {
         state.updating = false;
-        // Remove the category from the list
         if (action.payload?.data) {
           state.categories = state.categories.filter(
             (c) => c.id !== action.payload.data.id
@@ -650,14 +607,12 @@ const productsSlice = createSlice({
         state.updateError =
           action.payload || action.error.message || "Failed to delete category";
       })
-      // subcategory CRUD
       .addCase(createSubcategory.pending, (state) => {
         state.updating = true;
         state.updateError = null;
       })
       .addCase(createSubcategory.fulfilled, (state, action) => {
         state.updating = false;
-        // Add the new subcategory to the list if it's in the expected format
         if (action.payload?.data) {
           state.subcategories.push(action.payload.data);
         }
@@ -675,7 +630,6 @@ const productsSlice = createSlice({
       })
       .addCase(updateSubcategory.fulfilled, (state, action) => {
         state.updating = false;
-        // Update the subcategory in the list
         if (action.payload?.data) {
           const idx = state.subcategories.findIndex(
             (s) => s.id === action.payload.data.id
@@ -698,7 +652,6 @@ const productsSlice = createSlice({
       })
       .addCase(deleteSubcategory.fulfilled, (state, action) => {
         state.updating = false;
-        // Remove the subcategory from the list
         if (action.payload?.data) {
           state.subcategories = state.subcategories.filter(
             (s) => s.id !== action.payload.data.id
@@ -714,5 +667,4 @@ const productsSlice = createSlice({
       });
   },
 });
-
 export default productsSlice.reducer;

@@ -1,5 +1,4 @@
 "use client";
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +14,6 @@ import {
   deleteSubcategory,
 } from "@/redux/slices/productsSlice";
 import { toast } from "sonner";
-
 export default function SubcategoriesPage() {
   const dispatch = useDispatch<AppDispatch>();
   const {
@@ -28,7 +26,6 @@ export default function SubcategoriesPage() {
     lastFetched,
   } = useSelector((state: RootState) => state.products);
   const userToken = useSelector((s: RootState) => s.user.userData.token);
-
   const [query, setQuery] = React.useState("");
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [form, setForm] = React.useState({
@@ -37,8 +34,6 @@ export default function SubcategoriesPage() {
   });
   const [formError, setFormError] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
-
-  // Edit modal state
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [editingSubcategoryId, setEditingSubcategoryId] = React.useState<
     number | null
@@ -47,37 +42,10 @@ export default function SubcategoriesPage() {
     name: "",
     categoryId: "",
   });
-
   React.useEffect(() => {
-    // Only fetch if data arrays are empty, not loading, and haven't been fetched recently
-    const shouldFetchCategories =
-      categories.length === 0 &&
-      !categoriesLoading &&
-      (!lastFetched.categories ||
-        Date.now() - lastFetched.categories > 5 * 60 * 1000);
-
-    const shouldFetchSubcategories =
-      subcategories.length === 0 &&
-      !subcategoriesLoading &&
-      (!lastFetched.subcategories ||
-        Date.now() - lastFetched.subcategories > 5 * 60 * 1000);
-
-    if (shouldFetchCategories) {
-      dispatch(fetchCategories());
-    }
-    if (shouldFetchSubcategories) {
-      dispatch(fetchAllSubcategories());
-    }
-  }, [
-    dispatch,
-    categories.length,
-    categoriesLoading,
-    subcategories.length,
-    subcategoriesLoading,
-    lastFetched.categories,
-    lastFetched.subcategories,
-  ]);
-
+    dispatch(fetchCategories());
+    dispatch(fetchAllSubcategories());
+  }, [dispatch]);
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return subcategories;
@@ -87,7 +55,6 @@ export default function SubcategoriesPage() {
       )
     );
   }, [subcategories, query]);
-
   const openEdit = (subcategory: any) => {
     setIsEditOpen(true);
     setEditingSubcategoryId(subcategory.id);
@@ -96,23 +63,20 @@ export default function SubcategoriesPage() {
       categoryId: String(subcategory.categoryId) || "",
     });
   };
-
   const handleDelete = async (id: number) => {
     if (!confirm("Are you sure you want to delete this subcategory?")) {
       return;
     }
-
     try {
       const result = await dispatch(
         deleteSubcategory({ id, token: userToken }) as any
       ).unwrap();
       toast.success(result?.message || "Subcategory deleted successfully");
-      dispatch(fetchAllSubcategories()); // Refresh the list
+      dispatch(fetchAllSubcategories());
     } catch (err: any) {
       toast.error(err || "Failed to delete subcategory");
     }
   };
-
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -124,10 +88,19 @@ export default function SubcategoriesPage() {
             onChange={(e) => setQuery(e.target.value)}
             className="max-w-sm"
           />
+          <Button
+            variant="outline"
+            onClick={() => {
+              dispatch(fetchAllSubcategories());
+              dispatch(fetchCategories());
+            }}
+            disabled={subcategoriesLoading}
+          >
+            Refresh
+          </Button>
           <Button onClick={() => setIsModalOpen(true)}>Add Subcategory</Button>
         </div>
       </div>
-
       <Card className="p-0 overflow-hidden">
         <div className="grid grid-cols-12 px-4 py-2 text-xs font-medium text-gray-500 bg-gray-50">
           <div className="col-span-4">Name</div>
@@ -183,10 +156,8 @@ export default function SubcategoriesPage() {
           )}
         </div>
       </Card>
-
-      {/* Add Subcategory Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Add Subcategory</h3>
@@ -197,16 +168,13 @@ export default function SubcategoriesPage() {
                 ✕
               </button>
             </div>
-
             {formError && (
               <div className="mb-3 text-sm text-red-600">{formError}</div>
             )}
-
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
                 setFormError(null);
-
                 if (!form.name.trim()) {
                   return setFormError("Name is required");
                 }
@@ -216,7 +184,6 @@ export default function SubcategoriesPage() {
                 if (!userToken) {
                   return setFormError("You must be logged in");
                 }
-
                 try {
                   setSubmitting(true);
                   const result = await dispatch(
@@ -226,7 +193,6 @@ export default function SubcategoriesPage() {
                       token: userToken,
                     }) as any
                   ).unwrap();
-
                   toast.success(
                     result?.message || "Subcategory created successfully"
                   );
@@ -247,7 +213,6 @@ export default function SubcategoriesPage() {
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
-
               <select
                 value={form.categoryId}
                 onChange={(e) =>
@@ -262,7 +227,6 @@ export default function SubcategoriesPage() {
                   </option>
                 ))}
               </select>
-
               <div className="flex items-center justify-end gap-2 pt-2">
                 <Button
                   type="button"
@@ -279,10 +243,8 @@ export default function SubcategoriesPage() {
           </div>
         </div>
       )}
-
-      {/* Edit Subcategory Modal */}
       {isEditOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Edit Subcategory</h3>
@@ -293,11 +255,9 @@ export default function SubcategoriesPage() {
                 ✕
               </button>
             </div>
-
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
-
                 if (!editForm.name.trim()) {
                   toast.error("Name is required");
                   return;
@@ -307,7 +267,6 @@ export default function SubcategoriesPage() {
                   return;
                 }
                 if (!editingSubcategoryId) return;
-
                 try {
                   const result = await dispatch(
                     updateSubcategory({
@@ -317,7 +276,6 @@ export default function SubcategoriesPage() {
                       token: userToken,
                     }) as any
                   ).unwrap();
-
                   toast.success(
                     result?.message || "Subcategory updated successfully"
                   );
@@ -336,7 +294,6 @@ export default function SubcategoriesPage() {
                   setEditForm({ ...editForm, name: e.target.value })
                 }
               />
-
               <select
                 value={editForm.categoryId}
                 onChange={(e) =>
@@ -351,7 +308,6 @@ export default function SubcategoriesPage() {
                   </option>
                 ))}
               </select>
-
               <div className="flex items-center justify-end gap-2 pt-2">
                 <Button
                   type="button"

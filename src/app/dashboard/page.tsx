@@ -1,8 +1,6 @@
 "use client";
-
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
-
 export default function DashboardHome() {
   const stats = [
     { label: "Total Orders", value: 128, change: "+12%" },
@@ -28,7 +26,6 @@ export default function DashboardHome() {
           </motion.div>
         ))}
       </div>
-
       <Card className="p-4">
         <div className="font-semibold mb-2">Recent Activity</div>
         <div className="text-sm text-gray-500">No recent activity yet.</div>

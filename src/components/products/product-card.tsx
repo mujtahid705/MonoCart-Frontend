@@ -1,5 +1,4 @@
 "use client";
-
 import { motion } from "framer-motion";
 import { Heart, ShoppingCart, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import Link from "next/link";
-
 interface Product {
   id: string;
   name: string;
@@ -17,12 +15,10 @@ interface Product {
   reviews: number;
   image: string;
 }
-
 interface ProductCardProps {
   product: Product;
   index: number;
 }
-
 export function ProductCard({ product, index }: ProductCardProps) {
   return (
     <motion.div
@@ -46,13 +42,11 @@ export function ProductCard({ product, index }: ProductCardProps) {
         <Link href={`/products/${product.id}`}>
           <div className="relative aspect-square overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
-
             <ImageWithFallback
               src={product.image}
               alt={product.name}
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
             />
-
             <div className="absolute top-3 right-3 flex flex-col space-y-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0 z-20">
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                 <Button
@@ -73,7 +67,6 @@ export function ProductCard({ product, index }: ProductCardProps) {
                 </Button>
               </motion.div>
             </div>
-
             {product.originalPrice > product.price && (
               <motion.div
                 initial={{ scale: 0, rotate: -45 }}
@@ -88,7 +81,6 @@ export function ProductCard({ product, index }: ProductCardProps) {
                 </Badge>
               </motion.div>
             )}
-
             <div className="absolute inset-x-4 bottom-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-20">
               <Button
                 size="sm"
@@ -99,7 +91,6 @@ export function ProductCard({ product, index }: ProductCardProps) {
             </div>
           </div>
         </Link>
-
         <div className="p-5">
           <div className="space-y-3">
             <Link href={`/products/${product.id}`}>
@@ -107,7 +98,6 @@ export function ProductCard({ product, index }: ProductCardProps) {
                 {product.name}
               </h3>
             </Link>
-
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-1">
                 <div className="flex items-center">
@@ -127,7 +117,6 @@ export function ProductCard({ product, index }: ProductCardProps) {
                 </span>
               </div>
             </div>
-
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <div className="flex items-center space-x-2">
@@ -147,7 +136,6 @@ export function ProductCard({ product, index }: ProductCardProps) {
                   </p>
                 )}
               </div>
-
               <motion.div
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
@@ -163,7 +151,6 @@ export function ProductCard({ product, index }: ProductCardProps) {
             </div>
           </div>
         </div>
-
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-10 transform -translate-x-full group-hover:translate-x-full transition-all duration-1000 pointer-events-none" />
       </Card>
     </motion.div>

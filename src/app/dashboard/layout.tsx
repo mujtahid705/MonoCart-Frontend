@@ -1,5 +1,4 @@
 "use client";
-
 import React from "react";
 import Link from "next/link";
 import { useSelector } from "react-redux";
@@ -15,7 +14,6 @@ import {
   FolderOpen,
   Tags,
 } from "lucide-react";
-
 export default function DashboardLayout({
   children,
 }: {
@@ -24,13 +22,11 @@ export default function DashboardLayout({
   const { isLoggedIn, userData } = useSelector((s: RootState) => s.user);
   const router = useRouter();
   const pathname = usePathname();
-
   React.useEffect(() => {
     if (!isLoggedIn || !["admin", "superAdmin"].includes(userData.role)) {
       router.replace("/");
     }
   }, [isLoggedIn, userData.role, router]);
-
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Products", href: "/dashboard/products", icon: Files },
@@ -40,10 +36,8 @@ export default function DashboardLayout({
     { name: "Orders", href: "/dashboard/orders", icon: Package },
     { name: "Settings", href: "/dashboard/settings", icon: Settings },
   ];
-
   return (
     <div className="min-h-[calc(100vh-64px-240px)] bg-white">
-      {/* top bar (inside dashboard) */}
       <div className="border-b bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60 sticky top-16 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
           <div className="font-semibold text-gray-900">Admin Panel</div>
@@ -52,9 +46,7 @@ export default function DashboardLayout({
           </div>
         </div>
       </div>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 md:grid-cols-[240px_1fr] gap-6">
-        {/* sidebar */}
         <aside className="rounded-lg border bg-white shadow-sm p-3 h-fit md:sticky md:top-[calc(64px+56px+16px)]">
           <nav className="space-y-1">
             {navItems.map(({ name, href, icon: Icon }) => {
@@ -77,8 +69,6 @@ export default function DashboardLayout({
             })}
           </nav>
         </aside>
-
-        {/* content */}
         <main className="min-h-[60vh]">{children}</main>
       </div>
     </div>

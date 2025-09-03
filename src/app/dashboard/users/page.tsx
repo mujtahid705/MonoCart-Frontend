@@ -1,27 +1,22 @@
 "use client";
-
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/redux/store";
 import { fetchAllUsers } from "@/redux/slices/userSlice";
 import React from "react";
-
 export default function UsersPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { userData, users, loading, error, lastFetched } = useSelector(
     (s: RootState) => s.user
   );
   const [searchQuery, setSearchQuery] = React.useState("");
-
   React.useEffect(() => {
-    // Only fetch if users array is empty, not currently loading, we have a token, and haven't fetched recently (2 minutes)
     const shouldFetch =
       userData.token &&
       users.length === 0 &&
       !loading.fetchAll &&
       (!lastFetched.users || Date.now() - lastFetched.users > 2 * 60 * 1000);
-
     if (shouldFetch) {
       dispatch(fetchAllUsers(userData.token));
     }
@@ -32,11 +27,9 @@ export default function UsersPage() {
     loading.fetchAll,
     lastFetched.users,
   ]);
-
   const filteredUsers = React.useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) return users;
-
     return users.filter(
       (user) =>
         user.name.toLowerCase().includes(query) ||
@@ -45,15 +38,12 @@ export default function UsersPage() {
         user.role.toLowerCase().includes(query)
     );
   }, [users, searchQuery]);
-
   if (loading.fetchAll) {
     return <div className="p-6 text-sm text-gray-500">Loading users...</div>;
   }
-
   if (error.fetchAll) {
     return <div className="p-6 text-sm text-red-600">{error.fetchAll}</div>;
   }
-
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -68,7 +58,6 @@ export default function UsersPage() {
           className="max-w-sm"
         />
       </div>
-
       {filteredUsers.length === 0 ? (
         <div className="p-6 text-sm text-gray-500">
           {searchQuery
