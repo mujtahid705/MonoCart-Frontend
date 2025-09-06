@@ -28,12 +28,14 @@ export function ProductsSection() {
   }>({ g: null, w: null });
   React.useEffect(() => {
     let active = true;
-    const mapToCard = (items: Array<{
-      id: string;
-      title?: string;
-      price?: number;
-      images?: Array<{ url?: string }>;
-    }>): CardProduct[] =>
+    const mapToCard = (
+      items: Array<{
+        id: string;
+        title?: string;
+        price?: number;
+        images?: Array<{ url?: string }>;
+      }>
+    ): CardProduct[] =>
       items.map((p) => ({
         id: String(p.id),
         name: p.title ?? "Untitled",

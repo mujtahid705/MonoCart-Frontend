@@ -121,8 +121,8 @@ export default function AboutPage() {
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
               Your trusted partner for quality products and exceptional shopping
-              experience. We&apos;re committed to bringing you the best products at
-              the best prices, delivered right to your doorstep.
+              experience. We&apos;re committed to bringing you the best products
+              at the best prices, delivered right to your doorstep.
             </p>
           </motion.div>
         </div>
@@ -168,8 +168,8 @@ export default function AboutPage() {
                 experience in Bangladesh.
               </p>
               <p className="text-gray-600 mb-6 leading-relaxed">
-                Today, we&apos;re proud to serve over 50,000 customers across the
-                country and beyond, offering a curated selection of products
+                Today, we&apos;re proud to serve over 50,000 customers across
+                the country and beyond, offering a curated selection of products
                 ranging from electronics and fashion to home essentials and
                 more. Our commitment to quality, affordability, and customer
                 satisfaction remains unwavering.
@@ -250,8 +250,8 @@ export default function AboutPage() {
               Our Journey
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              From humble beginnings to serving thousands of customers, here&apos;s
-              our story.
+              From humble beginnings to serving thousands of customers,
+              here&apos;s our story.
             </p>
           </motion.div>
           <div className="relative">

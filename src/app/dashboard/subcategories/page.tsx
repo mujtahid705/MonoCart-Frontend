@@ -52,7 +52,11 @@ export default function SubcategoriesPage() {
       )
     );
   }, [subcategories, query]);
-  const openEdit = (subcategory: { id: number; name: string; categoryId: number }) => {
+  const openEdit = (subcategory: {
+    id: number;
+    name: string;
+    categoryId: number;
+  }) => {
     setIsEditOpen(true);
     setEditingSubcategoryId(subcategory.id);
     setEditForm({
@@ -198,7 +202,8 @@ export default function SubcategoriesPage() {
                   setForm({ name: "", categoryId: "" });
                   dispatch(fetchAllSubcategories());
                 } catch (err: unknown) {
-                  const errorMessage = err instanceof Error ? err.message : String(err);
+                  const errorMessage =
+                    err instanceof Error ? err.message : String(err);
                   setFormError(errorMessage || "Failed to create subcategory");
                   toast.error(errorMessage || "Failed to create subcategory");
                 } finally {
@@ -281,7 +286,8 @@ export default function SubcategoriesPage() {
                   setIsEditOpen(false);
                   dispatch(fetchAllSubcategories());
                 } catch (err: unknown) {
-                  const errorMessage = err instanceof Error ? err.message : String(err);
+                  const errorMessage =
+                    err instanceof Error ? err.message : String(err);
                   toast.error(errorMessage || "Failed to update subcategory");
                 }
               }}

@@ -118,12 +118,15 @@ export const fetchAllProducts = createAsyncThunk(
       category?: { id: string | number };
       subCategoryId?: string | number;
       subCategory?: { id: string | number };
-      images?: Array<{
-        url?: string;
-        imageUrl?: string;
-        path?: string;
-        src?: string;
-      } | string>;
+      images?: Array<
+        | {
+            url?: string;
+            imageUrl?: string;
+            path?: string;
+            src?: string;
+          }
+        | string
+      >;
     }>;
     console.log("📋 Products list:", list);
     console.log("📊 Products count:", list.length);
@@ -152,10 +155,38 @@ export const fetchAllProducts = createAsyncThunk(
               typeof im === "string"
                 ? im
                 : typeof im === "object" && im !== null
-                ? (im as { url?: string; imageUrl?: string; path?: string; src?: string })?.url ??
-                  (im as { url?: string; imageUrl?: string; path?: string; src?: string })?.imageUrl ??
-                  (im as { url?: string; imageUrl?: string; path?: string; src?: string })?.path ??
-                  (im as { url?: string; imageUrl?: string; path?: string; src?: string })?.src
+                ? (
+                    im as {
+                      url?: string;
+                      imageUrl?: string;
+                      path?: string;
+                      src?: string;
+                    }
+                  )?.url ??
+                  (
+                    im as {
+                      url?: string;
+                      imageUrl?: string;
+                      path?: string;
+                      src?: string;
+                    }
+                  )?.imageUrl ??
+                  (
+                    im as {
+                      url?: string;
+                      imageUrl?: string;
+                      path?: string;
+                      src?: string;
+                    }
+                  )?.path ??
+                  (
+                    im as {
+                      url?: string;
+                      imageUrl?: string;
+                      path?: string;
+                      src?: string;
+                    }
+                  )?.src
                 : undefined;
             return { url: joinUrl(imageBase, raw) };
           })

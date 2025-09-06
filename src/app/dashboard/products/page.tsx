@@ -109,7 +109,9 @@ export default function ProductsPage() {
         price: String(p.price ?? ""),
         stock: String(p.stock ?? ""),
         brand: p.brand || "",
-        existingImages: (p.images || []).map((im: { url?: string }) => im?.url || ""),
+        existingImages: (p.images || []).map(
+          (im: { url?: string }) => im?.url || ""
+        ),
         newImages: [],
         categoryId: p.categoryId ? String(p.categoryId) : "",
         subCategoryId: p.subCategoryId ? String(p.subCategoryId) : "",
@@ -236,7 +238,10 @@ export default function ProductsPage() {
                               );
                               dispatch(fetchAllProducts());
                             } catch (err: unknown) {
-                              const errorMessage = err instanceof Error ? err.message : String(err);
+                              const errorMessage =
+                                err instanceof Error
+                                  ? err.message
+                                  : String(err);
                               toast.error(
                                 errorMessage || "Failed to delete product"
                               );
@@ -327,7 +332,8 @@ export default function ProductsPage() {
                   });
                   dispatch(fetchAllProducts());
                 } catch (err: unknown) {
-                  const errorMessage = err instanceof Error ? err.message : String(err);
+                  const errorMessage =
+                    err instanceof Error ? err.message : String(err);
                   setFormError(errorMessage || "Failed to create product");
                   toast.error(errorMessage || "Failed to create product");
                 } finally {
@@ -715,7 +721,8 @@ export default function ProductsPage() {
                         setIsEditOpen(false);
                         dispatch(fetchAllProducts());
                       } catch (err: unknown) {
-                        const errorMessage = err instanceof Error ? err.message : String(err);
+                        const errorMessage =
+                          err instanceof Error ? err.message : String(err);
                         toast.error(errorMessage || "Failed to update");
                       }
                     }}

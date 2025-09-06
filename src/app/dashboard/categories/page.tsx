@@ -180,7 +180,8 @@ export default function CategoriesPage() {
                   setForm({ name: "" });
                   dispatch(fetchCategories());
                 } catch (err: unknown) {
-                  const errorMessage = err instanceof Error ? err.message : String(err);
+                  const errorMessage =
+                    err instanceof Error ? err.message : String(err);
                   setFormError(errorMessage || "Failed to create category");
                   toast.error(errorMessage || "Failed to create category");
                 } finally {
@@ -244,7 +245,8 @@ export default function CategoriesPage() {
                   setIsEditOpen(false);
                   dispatch(fetchCategories());
                 } catch (err: unknown) {
-                  const errorMessage = err instanceof Error ? err.message : String(err);
+                  const errorMessage =
+                    err instanceof Error ? err.message : String(err);
                   toast.error(errorMessage || "Failed to update category");
                 }
               }}
