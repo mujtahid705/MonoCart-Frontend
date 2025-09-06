@@ -2,7 +2,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "@/redux/store";
@@ -18,12 +17,10 @@ export default function SubcategoriesPage() {
   const dispatch = useDispatch<AppDispatch>();
   const {
     categories,
-    categoriesLoading,
     subcategories,
     subcategoriesLoading,
     subcategoriesError,
     updating,
-    lastFetched,
   } = useSelector((state: RootState) => state.products);
   const userToken = useSelector((s: RootState) => s.user.userData.token);
   const [query, setQuery] = React.useState("");
@@ -55,7 +52,11 @@ export default function SubcategoriesPage() {
       )
     );
   }, [subcategories, query]);
-  const openEdit = (subcategory: any) => {
+  const openEdit = (subcategory: {
+    id: number;
+    name: string;
+    categoryId: number;
+  }) => {
     setIsEditOpen(true);
     setEditingSubcategoryId(subcategory.id);
     setEditForm({
@@ -69,12 +70,13 @@ export default function SubcategoriesPage() {
     }
     try {
       const result = await dispatch(
-        deleteSubcategory({ id, token: userToken }) as any
+        deleteSubcategory({ id, token: userToken })
       ).unwrap();
       toast.success(result?.message || "Subcategory deleted successfully");
       dispatch(fetchAllSubcategories());
-    } catch (err: any) {
-      toast.error(err || "Failed to delete subcategory");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      toast.error(errorMessage || "Failed to delete subcategory");
     }
   };
   return (
@@ -191,7 +193,7 @@ export default function SubcategoriesPage() {
                       name: form.name.trim(),
                       categoryId: parseInt(form.categoryId),
                       token: userToken,
-                    }) as any
+                    })
                   ).unwrap();
                   toast.success(
                     result?.message || "Subcategory created successfully"
@@ -199,9 +201,11 @@ export default function SubcategoriesPage() {
                   setIsModalOpen(false);
                   setForm({ name: "", categoryId: "" });
                   dispatch(fetchAllSubcategories());
-                } catch (err: any) {
-                  setFormError(err || "Failed to create subcategory");
-                  toast.error(err || "Failed to create subcategory");
+                } catch (err: unknown) {
+                  const errorMessage =
+                    err instanceof Error ? err.message : String(err);
+                  setFormError(errorMessage || "Failed to create subcategory");
+                  toast.error(errorMessage || "Failed to create subcategory");
                 } finally {
                   setSubmitting(false);
                 }
@@ -274,15 +278,17 @@ export default function SubcategoriesPage() {
                       name: editForm.name.trim(),
                       categoryId: parseInt(editForm.categoryId),
                       token: userToken,
-                    }) as any
+                    })
                   ).unwrap();
                   toast.success(
                     result?.message || "Subcategory updated successfully"
                   );
                   setIsEditOpen(false);
                   dispatch(fetchAllSubcategories());
-                } catch (err: any) {
-                  toast.error(err || "Failed to update subcategory");
+                } catch (err: unknown) {
+                  const errorMessage =
+                    err instanceof Error ? err.message : String(err);
+                  toast.error(errorMessage || "Failed to update subcategory");
                 }
               }}
               className="space-y-4"

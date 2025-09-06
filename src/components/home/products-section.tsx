@@ -28,7 +28,14 @@ export function ProductsSection() {
   }>({ g: null, w: null });
   React.useEffect(() => {
     let active = true;
-    const mapToCard = (items: any[]): CardProduct[] =>
+    const mapToCard = (
+      items: Array<{
+        id: string;
+        title?: string;
+        price?: number;
+        images?: Array<{ url?: string }>;
+      }>
+    ): CardProduct[] =>
       items.map((p) => ({
         id: String(p.id),
         name: p.title ?? "Untitled",
@@ -42,16 +49,18 @@ export function ProductsSection() {
       try {
         const g = await dispatch(fetchAllProducts({ category: 2 })).unwrap();
         if (active) setGadgets(mapToCard(g));
-      } catch (e: any) {
-        if (active) setError((s) => ({ ...s, g: e?.message || "Failed" }));
+      } catch (e: unknown) {
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        if (active) setError((s) => ({ ...s, g: errorMessage || "Failed" }));
       } finally {
         if (active) setLoading((s) => ({ ...s, g: false }));
       }
       try {
         const w = await dispatch(fetchAllProducts({ category: 1 })).unwrap();
         if (active) setWomenProducts(mapToCard(w));
-      } catch (e: any) {
-        if (active) setError((s) => ({ ...s, w: e?.message || "Failed" }));
+      } catch (e: unknown) {
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        if (active) setError((s) => ({ ...s, w: errorMessage || "Failed" }));
       } finally {
         if (active) setLoading((s) => ({ ...s, w: false }));
       }

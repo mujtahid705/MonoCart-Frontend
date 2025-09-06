@@ -18,6 +18,7 @@ import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch } from "@/redux/store";
 import {
   fetchAllProducts,
   fetchProductById,
@@ -41,7 +42,7 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
 
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const {
     currentItem: product,
     currentLoading: loading,
@@ -59,7 +60,7 @@ export default function ProductDetailPage() {
   // Fetch product by id via thunk
   useEffect(() => {
     if (!id) return;
-    dispatch(fetchProductById(String(id)) as any);
+    dispatch(fetchProductById(String(id)));
   }, [dispatch, id]);
 
   // After product loads, fetch related products by category/subCategory
@@ -72,7 +73,7 @@ export default function ProductDetailPage() {
         fetchAllProducts({
           category: cat ?? "",
           subCategory: sub ?? "",
-        }) as any
+        })
       );
     }
   }, [dispatch, product]);
@@ -180,7 +181,7 @@ export default function ProductDetailPage() {
   }
 
   const productImages: string[] = product.images.length
-    ? (product.images as any[]).map((im: any) =>
+    ? product.images.map((im: { url?: string } | string) =>
         typeof im === "string" ? im : im?.url || "/vercel.svg"
       )
     : ["/vercel.svg"];
