@@ -10,11 +10,9 @@ import {
   Star,
   Globe,
   Target,
-  CheckCircle,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import Image from "next/image";
 export default function AboutPage() {
   const stats = [
     { label: "Happy Customers", value: "50,000+", icon: Users },
@@ -123,7 +121,7 @@ export default function AboutPage() {
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
               Your trusted partner for quality products and exceptional shopping
-              experience. We're committed to bringing you the best products at
+              experience. We&apos;re committed to bringing you the best products at
               the best prices, delivered right to your doorstep.
             </p>
           </motion.div>
@@ -170,7 +168,7 @@ export default function AboutPage() {
                 experience in Bangladesh.
               </p>
               <p className="text-gray-600 mb-6 leading-relaxed">
-                Today, we're proud to serve over 50,000 customers across the
+                Today, we&apos;re proud to serve over 50,000 customers across the
                 country and beyond, offering a curated selection of products
                 ranging from electronics and fashion to home essentials and
                 more. Our commitment to quality, affordability, and customer
@@ -178,7 +176,7 @@ export default function AboutPage() {
               </p>
               <p className="text-gray-600 leading-relaxed">
                 We believe that shopping should be convenient, enjoyable, and
-                trustworthy. That's why we work tirelessly to ensure every
+                trustworthy. That&apos;s why we work tirelessly to ensure every
                 interaction with MonoCart exceeds your expectations.
               </p>
             </motion.div>
@@ -252,7 +250,7 @@ export default function AboutPage() {
               Our Journey
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              From humble beginnings to serving thousands of customers, here's
+              From humble beginnings to serving thousands of customers, here&apos;s
               our story.
             </p>
           </motion.div>

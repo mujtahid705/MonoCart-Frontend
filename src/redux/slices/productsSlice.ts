@@ -107,7 +107,24 @@ export const fetchAllProducts = createAsyncThunk(
     }
     const json = await res.json();
     console.log("📦 Raw API Response:", json);
-    const list: any[] = json?.data ?? json ?? [];
+    const list = (json?.data ?? json ?? []) as Array<{
+      id: string;
+      title: string;
+      slug: string;
+      price: number;
+      stock: number;
+      brand: string;
+      categoryId?: string | number;
+      category?: { id: string | number };
+      subCategoryId?: string | number;
+      subCategory?: { id: string | number };
+      images?: Array<{
+        url?: string;
+        imageUrl?: string;
+        path?: string;
+        src?: string;
+      } | string>;
+    }>;
     console.log("📋 Products list:", list);
     console.log("📊 Products count:", list.length);
     const isAbsolute = (u: string) => /^https?:\/\//i.test(u);
@@ -130,11 +147,16 @@ export const fetchAllProducts = createAsyncThunk(
       subCategoryId:
         p?.subCategoryId ?? p?.subCategory?.id ?? p?.subCategory ?? undefined,
       images: Array.isArray(p.images)
-        ? p.images.map((im: any) => {
+        ? p.images.map((im: unknown) => {
             const raw =
               typeof im === "string"
                 ? im
-                : im?.url ?? im?.imageUrl ?? im?.path ?? im?.src;
+                : typeof im === "object" && im !== null
+                ? (im as { url?: string; imageUrl?: string; path?: string; src?: string })?.url ??
+                  (im as { url?: string; imageUrl?: string; path?: string; src?: string })?.imageUrl ??
+                  (im as { url?: string; imageUrl?: string; path?: string; src?: string })?.path ??
+                  (im as { url?: string; imageUrl?: string; path?: string; src?: string })?.src
+                : undefined;
             return { url: joinUrl(imageBase, raw) };
           })
         : [],

@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  eslint: {
+    ignoreDuringBuilds: false,
+  },
+  typescript: {
+    ignoreBuildErrors: false,
+  },
   images: {
     domains: ["images.unsplash.com", "images.pexels.com", "localhost"],
     dangerouslyAllowSVG: true,

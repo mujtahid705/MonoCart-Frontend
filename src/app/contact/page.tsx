@@ -141,7 +141,7 @@ export default function ContactPage() {
               Contact <span className="text-orange-500">Us</span>
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              We're here to help! Reach out to us for any questions, support, or
+              We&apos;re here to help! Reach out to us for any questions, support, or
               feedback. Our team is ready to assist you with your shopping
               experience.
             </p>
@@ -333,7 +333,7 @@ export default function ContactPage() {
               Frequently Asked Questions
             </h2>
             <p className="text-gray-600">
-              Quick answers to common questions. Can't find what you're looking
+              Quick answers to common questions. Can&apos;t find what you&apos;re looking
               for? Contact us directly.
             </p>
           </motion.div>

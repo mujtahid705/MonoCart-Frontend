@@ -54,10 +54,10 @@ export default function ProfilePage() {
     }
   }, [isLoggedIn, userData.role, userData.id, router, dispatch]);
   const handleViewOrder = (order: Order) => {
-    dispatch(setSelectedOrder(order) as any);
+    dispatch(setSelectedOrder(order));
   };
   const handleCloseOrderModal = () => {
-    dispatch(clearSelectedOrder() as any);
+    dispatch(clearSelectedOrder());
   };
   const handleCancelOrder = async (orderId: number) => {
     if (window.confirm("Are you sure you want to cancel this order?")) {
@@ -219,7 +219,7 @@ export default function ProfilePage() {
               </h3>
               <p className="text-red-500 mb-6">{error.fetchOrders}</p>
               <Button
-                onClick={() => dispatch(fetchUserOrders(userData.id) as any)}
+                onClick={() => dispatch(fetchUserOrders(userData.id))}
                 className="bg-orange-500 hover:bg-orange-600"
               >
                 Try Again

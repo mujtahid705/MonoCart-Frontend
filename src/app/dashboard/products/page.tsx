@@ -27,15 +27,6 @@ const handleUnauthorized = (status: number, message?: string) => {
     }
   }
 };
-type Product = {
-  id: string;
-  title: string;
-  slug: string;
-  price: number;
-  stock: number;
-  brand: string;
-  images: { url: string }[];
-};
 export default function ProductsPage() {
   const dispatch = useDispatch<AppDispatch>();
   const {
@@ -96,7 +87,7 @@ export default function ProductsPage() {
     if (categories.length === 0) {
       dispatch(fetchCategories());
     }
-  }, [dispatch]);
+  }, [dispatch, categories.length]);
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return products;
@@ -111,22 +102,23 @@ export default function ProductsPage() {
     setEditLoading(true);
     setEditError(null);
     try {
-      const p = await dispatch(fetchProductById(id) as any).unwrap();
+      const p = await dispatch(fetchProductById(id)).unwrap();
       setEditForm({
         title: p.title || "",
         description: p.description || "",
         price: String(p.price ?? ""),
         stock: String(p.stock ?? ""),
         brand: p.brand || "",
-        existingImages: (p.images || []).map((im: any) => im?.url || ""),
+        existingImages: (p.images || []).map((im: { url?: string }) => im?.url || ""),
         newImages: [],
         categoryId: p.categoryId ? String(p.categoryId) : "",
         subCategoryId: p.subCategoryId ? String(p.subCategoryId) : "",
       });
       if (p.categoryId) dispatch(fetchSubcategories(p.categoryId));
-    } catch (e: any) {
-      setEditError(e?.message || "Failed to load product");
-      toast.error(e?.message || "Failed to load product");
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      setEditError(errorMessage || "Failed to load product");
+      toast.error(errorMessage || "Failed to load product");
     } finally {
       setEditLoading(false);
     }
@@ -243,9 +235,10 @@ export default function ProductsPage() {
                                 data?.message || "Product deleted successfully"
                               );
                               dispatch(fetchAllProducts());
-                            } catch (err: any) {
+                            } catch (err: unknown) {
+                              const errorMessage = err instanceof Error ? err.message : String(err);
                               toast.error(
-                                err.message || "Failed to delete product"
+                                errorMessage || "Failed to delete product"
                               );
                             }
                           }}
@@ -333,9 +326,10 @@ export default function ProductsPage() {
                     subCategoryId: "",
                   });
                   dispatch(fetchAllProducts());
-                } catch (err: any) {
-                  setFormError(err.message || "Failed to create product");
-                  toast.error(err.message || "Failed to create product");
+                } catch (err: unknown) {
+                  const errorMessage = err instanceof Error ? err.message : String(err);
+                  setFormError(errorMessage || "Failed to create product");
+                  toast.error(errorMessage || "Failed to create product");
                 } finally {
                   setSubmitting(false);
                 }
@@ -715,13 +709,14 @@ export default function ProductsPage() {
                               existingImages: editForm.existingImages,
                               newImages: editForm.newImages,
                             },
-                          }) as any
+                          })
                         ).unwrap();
                         toast.success("Product updated");
                         setIsEditOpen(false);
                         dispatch(fetchAllProducts());
-                      } catch (err: any) {
-                        toast.error(err?.message || "Failed to update");
+                      } catch (err: unknown) {
+                        const errorMessage = err instanceof Error ? err.message : String(err);
+                        toast.error(errorMessage || "Failed to update");
                       }
                     }}
                   >

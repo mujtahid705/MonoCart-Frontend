@@ -53,7 +53,7 @@ export default function CategoriesPage() {
       [c.name, c.slug].some((f) => f?.toLowerCase().includes(q))
     );
   }, [categories, query]);
-  const openEdit = (category: any) => {
+  const openEdit = (category: { id: number; name: string; slug: string }) => {
     setIsEditOpen(true);
     setEditingCategoryId(category.id);
     setEditForm({
@@ -66,12 +66,13 @@ export default function CategoriesPage() {
     }
     try {
       const result = await dispatch(
-        deleteCategory({ id, token: userToken }) as any
+        deleteCategory({ id, token: userToken })
       ).unwrap();
       toast.success(result?.message || "Category deleted successfully");
       dispatch(fetchCategories());
-    } catch (err: any) {
-      toast.error(err || "Failed to delete category");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      toast.error(errorMessage || "Failed to delete category");
     }
   };
   return (
@@ -170,7 +171,7 @@ export default function CategoriesPage() {
                     createCategory({
                       name: form.name.trim(),
                       token: userToken,
-                    }) as any
+                    })
                   ).unwrap();
                   toast.success(
                     result?.message || "Category created successfully"
@@ -178,9 +179,10 @@ export default function CategoriesPage() {
                   setIsModalOpen(false);
                   setForm({ name: "" });
                   dispatch(fetchCategories());
-                } catch (err: any) {
-                  setFormError(err || "Failed to create category");
-                  toast.error(err || "Failed to create category");
+                } catch (err: unknown) {
+                  const errorMessage = err instanceof Error ? err.message : String(err);
+                  setFormError(errorMessage || "Failed to create category");
+                  toast.error(errorMessage || "Failed to create category");
                 } finally {
                   setSubmitting(false);
                 }
@@ -234,15 +236,16 @@ export default function CategoriesPage() {
                       id: editingCategoryId,
                       name: editForm.name.trim(),
                       token: userToken,
-                    }) as any
+                    })
                   ).unwrap();
                   toast.success(
                     result?.message || "Category updated successfully"
                   );
                   setIsEditOpen(false);
                   dispatch(fetchCategories());
-                } catch (err: any) {
-                  toast.error(err || "Failed to update category");
+                } catch (err: unknown) {
+                  const errorMessage = err instanceof Error ? err.message : String(err);
+                  toast.error(errorMessage || "Failed to update category");
                 }
               }}
               className="space-y-4"

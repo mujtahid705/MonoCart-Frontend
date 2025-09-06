@@ -197,7 +197,7 @@ export default function OrderSuccessPage() {
               Need Help?
             </h3>
             <p className="text-gray-600 mb-4">
-              If you have any questions about your order, please don't hesitate
+              If you have any questions about your order, please don&apos;t hesitate
               to contact us.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
