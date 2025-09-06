@@ -1,36 +1,195 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Monocart - Premium Shopping Destination
 
-## Getting Started
+A modern, responsive e-commerce website built with Next.js 15, TypeScript, Tailwind CSS, and Framer Motion.
 
-First, run the development server:
+## Features
+
+- 🛍️ **Modern E-commerce UI** - Beautiful, responsive design with smooth animations
+- 🎨 **Component-Based Architecture** - Modular, reusable components following Next.js best practices
+- 📱 **Mobile-First Design** - Fully responsive across all devices
+- ⚡ **Performance Optimized** - Built with Next.js 15 for optimal performance
+- 🎭 **Smooth Animations** - Powered by Framer Motion for engaging user interactions
+- 🎯 **TypeScript** - Full type safety throughout the application
+- 🎨 **Tailwind CSS** - Utility-first CSS framework for rapid development
+- 🔧 **Modern Tooling** - ESLint, Prettier, and other development tools
+
+## Pages & Components
+
+### Pages
+
+- **Home Page** (`/`) - Hero section, categories, featured products
+- **Products Page** (`/products`) - Product listing with search and filters
+- **Product Detail** (`/products/[id]`) - Individual product view with image gallery
+- **Login** (`/login`) - User authentication
+- **Register** (`/register`) - User registration
+
+### Components
+
+- **Layout Components** - Header, Footer
+- **UI Components** - Button, Input, Card, Badge, Select, Checkbox
+- **Product Components** - ProductCard, ImageWithFallback
+- **Home Components** - HeroSection, CategoriesSection, ProductsSection
+
+## Installation
+
+1. **Clone the repository**
+
+   ```bash
+   git clone <repository-url>
+   cd monocart_frontend
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+
+3. **Run the development server**
+
+   ```bash
+   npm run dev
+   ```
+
+4. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+## Required Packages
+
+The following packages are required for this application:
+
+### Core Dependencies
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install framer-motion lucide-react @radix-ui/react-slot @radix-ui/react-label @radix-ui/react-select @radix-ui/react-checkbox class-variance-authority clsx tailwind-merge
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Development Dependencies
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install -D tailwindcss-animate
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Project Structure
 
-## Learn More
+```
+src/
+├── app/                    # Next.js 15 app directory
+│   ├── globals.css        # Global styles
+│   ├── layout.tsx         # Root layout
+│   ├── page.tsx           # Home page
+│   ├── login/             # Login page
+│   ├── register/          # Register page
+│   └── products/          # Products pages
+├── components/            # Reusable components
+│   ├── ui/               # Base UI components
+│   ├── layout/           # Layout components
+│   ├── home/             # Home page components
+│   └── products/         # Product-related components
+└── lib/                  # Utility functions
+    └── utils.ts          # Common utilities
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Key Features
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 1. Responsive Design
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Mobile-first approach
+- Responsive grid layouts
+- Adaptive navigation
 
-## Deploy on Vercel
+### 2. Animations
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Page transitions
+- Hover effects
+- Loading animations
+- Scroll-triggered animations
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 3. Product Management
+
+- Product listing with filters
+- Search functionality
+- Category filtering
+- Product detail pages
+
+### 4. User Authentication
+
+- Login/Register forms
+- Form validation
+- Password visibility toggle
+
+### 5. Modern UI/UX
+
+- Clean, modern design
+- Consistent color scheme
+- Accessible components
+- Smooth interactions
+
+## Customization
+
+### Colors
+
+The application uses a custom color scheme defined in `tailwind.config.ts`. You can modify the colors in the `theme.extend.colors` section.
+
+### Components
+
+All UI components are located in `src/components/ui/` and can be easily customized or extended.
+
+### Styling
+
+The application uses Tailwind CSS for styling. You can modify styles in the respective component files or add custom styles in `src/app/globals.css`.
+
+## Development
+
+### Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+
+### Code Style
+
+The project uses:
+
+- TypeScript for type safety
+- ESLint for code linting
+- Prettier for code formatting
+- Tailwind CSS for styling
+
+## Deployment
+
+### Vercel (Recommended)
+
+1. Push your code to GitHub
+2. Connect your repository to Vercel
+3. Deploy automatically
+
+### Other Platforms
+
+The application can be deployed to any platform that supports Next.js:
+
+- Netlify
+- Railway
+- DigitalOcean App Platform
+- AWS Amplify
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License.
+
+## Support
+
+For support, please open an issue in the GitHub repository or contact the development team.
+
+---
+
+**Note**: This is a frontend-only application. For a complete e-commerce solution, you'll need to integrate with a backend API for user authentication, product management, and order processing.
