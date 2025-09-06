@@ -1,22 +1,16 @@
 "use client";
-
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import Link from "next/link";
-
 export function HeroSection() {
   return (
     <section className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-orange-900 text-white overflow-hidden">
-      {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(255,165,0,0.3)_0%,transparent_50%),radial-gradient(circle_at_80%_20%,rgba(255,193,7,0.3)_0%,transparent_50%)]"></div>
       </div>
-
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        {/* Reduced from py-24 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Reduced gap from 16 to 12 */}
           <motion.div
             className="space-y-8 z-10"
             initial={{ opacity: 0, x: -50 }}
@@ -39,7 +33,6 @@ export function HeroSection() {
                   </span>
                 </div>
               </motion.div>
-
               <motion.h1
                 className="text-6xl lg:text-7xl font-bold leading-tight"
                 initial={{ opacity: 0, y: 20 }}
@@ -57,7 +50,6 @@ export function HeroSection() {
                   Men&apos;s
                 </span>
               </motion.h1>
-
               <motion.p
                 className="text-xl text-gray-300 max-w-md leading-relaxed"
                 initial={{ opacity: 0, y: 20 }}
@@ -68,7 +60,6 @@ export function HeroSection() {
                 exclusive Monocart collection designed for the modern gentleman.
               </motion.p>
             </div>
-
             <motion.div
               className="flex flex-col sm:flex-row gap-4"
               initial={{ opacity: 0, y: 20 }}
@@ -88,7 +79,6 @@ export function HeroSection() {
                   </Button>
                 </Link>
               </motion.div>
-
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -103,7 +93,6 @@ export function HeroSection() {
               </motion.div>
             </motion.div>
           </motion.div>
-
           <motion.div
             className="relative z-10"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -111,7 +100,6 @@ export function HeroSection() {
             transition={{ duration: 0.8, delay: 0.3 }}
           >
             <div className="relative max-w-lg mx-auto">
-              {/* Main Hero Image */}
               <div className="relative bg-gradient-to-br from-orange-100 to-yellow-50 rounded-3xl p-8 shadow-2xl">
                 <div className="aspect-square rounded-2xl overflow-hidden shadow-lg">
                   <ImageWithFallback
@@ -122,29 +110,22 @@ export function HeroSection() {
                     height={500}
                   />
                 </div>
-
-                {/* Sale Badge */}
                 <div className="absolute -top-4 -right-4 bg-gradient-to-br from-red-500 to-orange-500 text-white rounded-full w-20 h-20 flex items-center justify-center shadow-xl">
                   <div className="text-center">
                     <div className="text-lg font-bold">50%</div>
                     <div className="text-xs font-semibold">OFF</div>
                   </div>
                 </div>
-
-                {/* Decorative Elements */}
                 <div className="absolute top-4 -left-2 w-4 h-4 bg-yellow-400 rounded-full shadow-md"></div>
                 <div className="absolute bottom-8 -right-2 w-3 h-3 bg-orange-400 rounded-full shadow-md"></div>
                 <div className="absolute bottom-4 -left-3 w-2 h-2 bg-red-400 rounded-full shadow-md"></div>
               </div>
-
-              {/* Background Decoration */}
               <div className="absolute inset-0 bg-gradient-to-r from-orange-200 to-yellow-200 rounded-3xl transform rotate-3 scale-95 opacity-30 -z-10"></div>
               <div className="absolute inset-0 bg-gradient-to-r from-yellow-200 to-orange-200 rounded-3xl transform -rotate-2 scale-90 opacity-20 -z-20"></div>
             </div>
           </motion.div>
         </div>
       </div>
-
       <div className="absolute bottom-0 left-0 right-0">
         <svg
           viewBox="0 0 1200 120"

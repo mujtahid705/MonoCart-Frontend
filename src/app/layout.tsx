@@ -5,15 +5,14 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { ReduxProvider } from "@/redux/Providers";
 import { Toaster } from "sonner";
-
+import { TopLoader } from "@/components/top-loader";
+import { Suspense } from "react";
 const inter = Inter({ subsets: ["latin"] });
-
 export const metadata: Metadata = {
   title: "Monocart - Premium Shopping Destination",
   description:
     "Discover the latest trends in fashion with our exclusive Monocart collection designed for the modern lifestyle.",
 };
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -23,9 +22,21 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <ReduxProvider>
+          <TopLoader />
           <div className="min-h-screen flex flex-col">
             <Header />
-            {children}
+            <Suspense
+              fallback={
+                <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                  <div className="text-center">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mb-4"></div>
+                    <p className="text-gray-600 text-lg">Loading...</p>
+                  </div>
+                </div>
+              }
+            >
+              {children}
+            </Suspense>
             <Footer />
           </div>
           <Toaster

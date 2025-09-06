@@ -16,22 +16,31 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchAllProducts,
   fetchProductById,
   type Product,
 } from "@/redux/slices/productsSlice";
+import { addToCart } from "@/redux/slices/cartSlice";
+import {
+  toggleFavorite,
+  selectIsInFavorites,
+} from "@/redux/slices/favoritesSlice";
 import type { RootState } from "@/redux/store";
 import { ProductCard } from "@/components/products/product-card";
+import { toast } from "sonner";
 export default function ProductDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
+  const router = useRouter();
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState("M");
   const [selectedColor, setSelectedColor] = useState("Black");
   const [quantity, setQuantity] = useState(1);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+
   const dispatch = useDispatch();
   const {
     currentItem: product,
@@ -40,6 +49,11 @@ export default function ProductDetailPage() {
   } = useSelector((s: RootState) => s.products);
   const { items: relatedItems, loading: relatedLoading } = useSelector(
     (s: RootState) => s.products
+  );
+
+  // Check if product is in favorites
+  const isInFavorites = useSelector((state: RootState) =>
+    product ? selectIsInFavorites(state, product.id) : false
   );
 
   // Fetch product by id via thunk
@@ -65,6 +79,84 @@ export default function ProductDetailPage() {
 
   const sizes = ["XS", "S", "M", "L", "XL"];
   const colors = ["Black", "White", "Gray", "Navy"];
+
+  // Handler for adding to cart
+  const handleAddToCart = async () => {
+    if (!product) return;
+
+    setIsAddingToCart(true);
+
+    try {
+      dispatch(
+        addToCart({
+          productData: {
+            id: product.id,
+            title: product.title,
+            slug: product.slug,
+            price: product.price,
+            stock: product.stock,
+            brand: product.brand,
+            images: product.images,
+            description: product.description,
+            categoryId: product.categoryId,
+            subCategoryId: product.subCategoryId,
+          },
+          quantity,
+          size: selectedSize,
+          color: selectedColor,
+        })
+      );
+
+      // Show success toast notification
+      toast.success(`${product.title} added to cart!`, {
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error("Failed to add to cart:", error);
+      toast.error("Failed to add to cart", {
+        duration: 3000,
+      });
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
+  // Handler for toggling favorites
+  const handleToggleFavorite = () => {
+    if (!product) return;
+
+    const isCurrentlyFavorite = isInFavorites;
+
+    dispatch(
+      toggleFavorite({
+        productData: {
+          id: product.id,
+          title: product.title,
+          slug: product.slug,
+          price: product.price,
+          stock: product.stock,
+          brand: product.brand,
+          images: product.images,
+          description: product.description,
+          categoryId: product.categoryId,
+          subCategoryId: product.subCategoryId,
+        },
+        rating: 4.5,
+      })
+    );
+
+    // Show toast notification based on action
+    if (isCurrentlyFavorite) {
+      toast.success(`${product.title} removed from favorites`, {
+        duration: 3000,
+      });
+    } else {
+      toast.success(`${product.title} added to favorites!`, {
+        duration: 3000,
+      });
+    }
+  };
+
   // Derive related products from store, filter out the current product id if present
   const relatedProducts = useMemo(() => {
     if (!product) return [] as Product[];
@@ -255,16 +347,38 @@ export default function ProductDetailPage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3">
-                  Add to Cart
+                <Button
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3"
+                  onClick={handleAddToCart}
+                  disabled={isAddingToCart || product.stock === 0}
+                >
+                  {isAddingToCart ? (
+                    <>
+                      <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                      Adding...
+                    </>
+                  ) : product.stock === 0 ? (
+                    "Out of Stock"
+                  ) : (
+                    "Add to Cart"
+                  )}
                 </Button>
               </motion.div>
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <Button variant="outline" size="icon" className="w-12 h-12">
-                  <Heart className="w-5 h-5" />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={`w-12 h-12 ${
+                    isInFavorites ? "bg-red-50 border-red-200 text-red-500" : ""
+                  }`}
+                  onClick={handleToggleFavorite}
+                >
+                  <Heart
+                    className={`w-5 h-5 ${isInFavorites ? "fill-current" : ""}`}
+                  />
                 </Button>
               </motion.div>
             </div>

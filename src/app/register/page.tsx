@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
@@ -15,7 +14,6 @@ import { useAppDispatch } from "@/hooks/hooks";
 import { registerUser } from "@/redux/slices/userSlice";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-
 export default function RegisterPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -30,7 +28,6 @@ export default function RegisterPage() {
     confirmPassword: "",
     agreeToTerms: false,
   });
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Registration attempt:", formData);
@@ -40,7 +37,6 @@ export default function RegisterPage() {
       name: `${formData.firstName} ${formData.lastName}`,
       phone: `+88${formData.phone}`,
     };
-
     dispatch(registerUser(data))
       .unwrap()
       .then((res) => {
@@ -52,11 +48,9 @@ export default function RegisterPage() {
         toast.error("Registration failed. Please try again.");
       });
   };
-
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -71,7 +65,6 @@ export default function RegisterPage() {
             <span>Back to Home</span>
           </Link>
         </motion.div>
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
           <motion.div
             className="order-2 lg:order-1"
@@ -100,7 +93,6 @@ export default function RegisterPage() {
                 </h1>
                 <p className="text-gray-600">Join our community today</p>
               </motion.div>
-
               <motion.form
                 onSubmit={handleSubmit}
                 className="space-y-6"
@@ -136,7 +128,6 @@ export default function RegisterPage() {
                     />
                   </div>
                 </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email*</Label>
@@ -167,7 +158,6 @@ export default function RegisterPage() {
                     />
                   </div>
                 </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="password">Password*</Label>
@@ -230,7 +220,6 @@ export default function RegisterPage() {
                     </div>
                   </div>
                 </div>
-
                 <div className="space-y-4">
                   <div className="flex items-start space-x-3">
                     <Checkbox
@@ -264,7 +253,6 @@ export default function RegisterPage() {
                     </Label>
                   </div>
                 </div>
-
                 <motion.div
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -277,7 +265,6 @@ export default function RegisterPage() {
                     Register
                   </Button>
                 </motion.div>
-
                 <motion.div
                   className="text-center"
                   initial={{ opacity: 0 }}
@@ -299,7 +286,6 @@ export default function RegisterPage() {
               </motion.form>
             </Card>
           </motion.div>
-
           <motion.div
             className="order-1 lg:order-2 sticky top-8"
             initial={{ opacity: 0, x: 50 }}
@@ -336,7 +322,6 @@ export default function RegisterPage() {
                     recommendations at Monocart
                   </p>
                 </motion.div>
-
                 <motion.div
                   className="grid grid-cols-2 gap-4 mt-8"
                   initial={{ opacity: 0, y: 20 }}

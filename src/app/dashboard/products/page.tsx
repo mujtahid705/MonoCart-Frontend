@@ -1,5 +1,4 @@
 "use client";
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,11 +10,23 @@ import type { RootState, AppDispatch } from "@/redux/store";
 import {
   fetchAllProducts,
   fetchProductById,
+  fetchCategories,
+  fetchSubcategories,
+  updateProduct,
 } from "@/redux/slices/productsSlice";
 import { useSelector as useReduxSelector } from "react-redux";
 import { toast } from "sonner";
-
-// Minimal type reflecting only fields we will show
+const handleUnauthorized = (status: number, message?: string) => {
+  if (status === 401 || message?.toLowerCase().includes("unauthorized")) {
+    console.log("401 Unauthorized in products page:", { status, message });
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      localStorage.removeItem("userData");
+      window.location.href = "/";
+    }
+  }
+};
 type Product = {
   id: string;
   title: string;
@@ -25,17 +36,26 @@ type Product = {
   brand: string;
   images: { url: string }[];
 };
-
 export default function ProductsPage() {
   const dispatch = useDispatch<AppDispatch>();
   const {
     items: products,
     loading,
     error,
+    categories,
+    categoriesLoading,
+    categoriesError,
+    subcategories,
+    subcategoriesLoading,
+    updating,
+    lastFetched,
   } = useSelector((state: RootState) => state.products);
   const userToken = useReduxSelector((s: RootState) => s.user.userData.token);
   const [query, setQuery] = React.useState("");
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = React.useState<
+    number | null
+  >(null);
   const [form, setForm] = React.useState({
     title: "",
     description: "",
@@ -43,11 +63,16 @@ export default function ProductsPage() {
     stock: "",
     brand: "",
     images: [] as File[],
+    categoryId: "",
+    subCategoryId: "",
   });
   const [formError, setFormError] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
-
-  // Edit modal state
+  React.useEffect(() => {
+    if (selectedCategoryId) {
+      dispatch(fetchSubcategories(selectedCategoryId));
+    }
+  }, [selectedCategoryId, dispatch]);
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [editingProductId, setEditingProductId] = React.useState<string | null>(
     null
@@ -62,12 +87,16 @@ export default function ProductsPage() {
     brand: "",
     existingImages: [] as string[],
     newImages: [] as File[],
+    categoryId: "",
+    subCategoryId: "",
   });
-
   React.useEffect(() => {
     dispatch(fetchAllProducts());
-  }, [dispatch]);
 
+    if (categories.length === 0) {
+      dispatch(fetchCategories());
+    }
+  }, [dispatch]);
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return products;
@@ -91,7 +120,10 @@ export default function ProductsPage() {
         brand: p.brand || "",
         existingImages: (p.images || []).map((im: any) => im?.url || ""),
         newImages: [],
+        categoryId: p.categoryId ? String(p.categoryId) : "",
+        subCategoryId: p.subCategoryId ? String(p.subCategoryId) : "",
       });
+      if (p.categoryId) dispatch(fetchSubcategories(p.categoryId));
     } catch (e: any) {
       setEditError(e?.message || "Failed to load product");
       toast.error(e?.message || "Failed to load product");
@@ -99,11 +131,9 @@ export default function ProductsPage() {
       setEditLoading(false);
     }
   };
-
   const totalEditImages =
     editForm.existingImages.length + editForm.newImages.length;
   const canAddMoreEditImages = totalEditImages < 5;
-
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -118,7 +148,6 @@ export default function ProductsPage() {
           <Button onClick={() => setIsModalOpen(true)}>Add Product</Button>
         </div>
       </div>
-
       <Card className="p-0 overflow-hidden">
         <div className="grid grid-cols-12 px-4 py-2 text-xs font-medium text-gray-500 bg-gray-50">
           <div className="col-span-5 sm:col-span-6">Product</div>
@@ -168,17 +197,63 @@ export default function ProductsPage() {
                       {p.stock > 0 ? `${p.stock} in stock` : "Out of stock"}
                     </div>
                     <div className="col-span-2 sm:col-span-2 text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          openEdit(String(p.id));
-                        }}
-                      >
-                        Edit
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            openEdit(String(p.id));
+                          }}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (
+                              !confirm(
+                                "Are you sure you want to delete this product?"
+                              )
+                            ) {
+                              return;
+                            }
+                            try {
+                              const res = await fetch(
+                                `${process.env.NEXT_PUBLIC_BASE_URL}/products/${p.id}`,
+                                {
+                                  method: "DELETE",
+                                  headers: {
+                                    Authorization: `Bearer ${userToken}`,
+                                  },
+                                }
+                              );
+                              const data = await res.json().catch(() => ({}));
+                              if (!res.ok) {
+                                handleUnauthorized(res.status, data?.message);
+                                throw new Error(
+                                  data?.message || "Failed to delete product"
+                                );
+                              }
+                              toast.success(
+                                data?.message || "Product deleted successfully"
+                              );
+                              dispatch(fetchAllProducts());
+                            } catch (err: any) {
+                              toast.error(
+                                err.message || "Failed to delete product"
+                              );
+                            }
+                          }}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          Delete
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </Link>
@@ -187,9 +262,8 @@ export default function ProductsPage() {
           )}
         </div>
       </Card>
-
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Add Product</h3>
@@ -200,17 +274,13 @@ export default function ProductsPage() {
                 ✕
               </button>
             </div>
-
             {formError && (
               <div className="mb-3 text-sm text-red-600">{formError}</div>
             )}
-
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
                 setFormError(null);
-
-                // Basic validation
                 if (!form.title.trim())
                   return setFormError("Title is required");
                 if (!form.description.trim())
@@ -221,9 +291,9 @@ export default function ProductsPage() {
                   return setFormError("Price must be a positive number");
                 if (!Number.isInteger(stockNum) || stockNum < 0)
                   return setFormError("Stock must be a non-negative integer");
-
+                if (!form.categoryId)
+                  return setFormError("Category is required");
                 if (!userToken) return setFormError("You must be logged in");
-
                 try {
                   setSubmitting(true);
                   const fd = new FormData();
@@ -231,11 +301,11 @@ export default function ProductsPage() {
                   fd.append("description", form.description.trim());
                   fd.append("price", String(priceNum));
                   fd.append("stock", String(stockNum));
-                  fd.append("categoryId", "1");
-                  fd.append("subCategoryId", "1");
                   fd.append("brand", form.brand.trim());
+                  fd.append("categoryId", String(form.categoryId));
+                  if (form.subCategoryId)
+                    fd.append("subCategoryId", String(form.subCategoryId));
                   form.images.forEach((file) => fd.append("images", file));
-
                   const res = await fetch(
                     `${process.env.NEXT_PUBLIC_BASE_URL}/products/create`,
                     {
@@ -250,8 +320,6 @@ export default function ProductsPage() {
                     const err = await res.json().catch(() => ({}));
                     throw new Error(err?.message || "Failed to create product");
                   }
-
-                  // success
                   toast.success("Product created successfully");
                   setIsModalOpen(false);
                   setForm({
@@ -261,6 +329,8 @@ export default function ProductsPage() {
                     stock: "",
                     brand: "",
                     images: [],
+                    categoryId: "",
+                    subCategoryId: "",
                   });
                   dispatch(fetchAllProducts());
                 } catch (err: any) {
@@ -306,30 +376,63 @@ export default function ProductsPage() {
                     }
                   />
                 </div>
-                <Input
-                  placeholder="Brand"
-                  value={form.brand}
-                  onChange={(e) =>
-                    setForm((s) => ({ ...s, brand: e.target.value }))
-                  }
-                />
-                {/* Hardcoded dropdowns for now */}
                 <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    placeholder="Brand"
+                    value={form.brand}
+                    onChange={(e) =>
+                      setForm((s) => ({ ...s, brand: e.target.value }))
+                    }
+                  />
                   <select
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    value="1"
-                    disabled
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-60"
+                    value={form.categoryId}
+                    onChange={(e) => {
+                      const newCategoryId = e.target.value;
+                      setSelectedCategoryId(Number(newCategoryId));
+                      console.log("Selected category:", newCategoryId);
+                      setForm((s) => ({
+                        ...s,
+                        categoryId: newCategoryId,
+                        subCategoryId: "",
+                      }));
+                      if (newCategoryId) {
+                        dispatch(fetchSubcategories(newCategoryId));
+                      }
+                    }}
                   >
-                    <option value="1">Category #1</option>
-                  </select>
-                  <select
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    value="1"
-                    disabled
-                  >
-                    <option value="1">Sub Category #1</option>
+                    <option value="" disabled>
+                      {categoriesLoading ? "Loading categories..." : "Category"}
+                    </option>
+                    {categories.length === 0 && !categoriesLoading && (
+                      <option disabled>No categories available</option>
+                    )}
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
+                <select
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-60"
+                  value={form.subCategoryId}
+                  onChange={(e) =>
+                    setForm((s) => ({ ...s, subCategoryId: e.target.value }))
+                  }
+                  disabled={!form.categoryId || subcategoriesLoading}
+                >
+                  <option value="" disabled>
+                    Subcategory
+                  </option>
+                  {subcategories
+                    .filter((sc) => String(sc.categoryId) === form.categoryId)
+                    .map((sc) => (
+                      <option key={sc.id} value={sc.id}>
+                        {sc.name}
+                      </option>
+                    ))}
+                </select>
                 <input
                   type="file"
                   multiple
@@ -342,8 +445,15 @@ export default function ProductsPage() {
                   }
                   className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100"
                 />
+                {categoriesLoading && (
+                  <div className="text-xs text-gray-500">
+                    Loading categories...
+                  </div>
+                )}
+                {categoriesError && (
+                  <div className="text-xs text-red-600">{categoriesError}</div>
+                )}
               </div>
-
               <div className="flex items-center justify-end gap-2 pt-2">
                 <Button
                   type="button"
@@ -360,9 +470,8 @@ export default function ProductsPage() {
           </div>
         </div>
       )}
-
       {isEditOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Edit Product</h3>
@@ -374,20 +483,15 @@ export default function ProductsPage() {
                 ✕
               </button>
             </div>
-
             {editError && (
               <div className="mb-3 text-sm text-red-600">{editError}</div>
             )}
-
             {editLoading ? (
               <div className="p-6 text-sm text-gray-500">Loading...</div>
             ) : (
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  // No API integration yet; just preview and close
-                  toast.info("Changes staged (no update API wired yet)");
-                  setIsEditOpen(false);
                 }}
                 className="space-y-4"
               >
@@ -428,15 +532,63 @@ export default function ProductsPage() {
                       }
                     />
                   </div>
-                  <Input
-                    placeholder="Brand"
-                    value={editForm.brand}
+                  <div className="grid grid-cols-2 gap-3">
+                    <Input
+                      placeholder="Brand"
+                      value={editForm.brand}
+                      onChange={(e) =>
+                        setEditForm((s) => ({ ...s, brand: e.target.value }))
+                      }
+                    />
+                    <select
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-60"
+                      value={editForm.categoryId}
+                      onChange={(e) => {
+                        const newCategoryId = e.target.value;
+                        setEditForm((s) => ({
+                          ...s,
+                          categoryId: newCategoryId,
+                          subCategoryId: "",
+                        }));
+                        if (newCategoryId) {
+                          dispatch(fetchSubcategories(newCategoryId));
+                        }
+                      }}
+                    >
+                      <option value="">
+                        {categoriesLoading
+                          ? "Loading categories..."
+                          : "Category"}
+                      </option>
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <select
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-60"
+                    value={editForm.subCategoryId}
                     onChange={(e) =>
-                      setEditForm((s) => ({ ...s, brand: e.target.value }))
+                      setEditForm((s) => ({
+                        ...s,
+                        subCategoryId: e.target.value,
+                      }))
                     }
-                  />
-
-                  {/* Existing images */}
+                    disabled={!editForm.categoryId || subcategoriesLoading}
+                  >
+                    <option value="">Subcategory</option>
+                    {subcategories
+                      .filter(
+                        (sc) => String(sc.categoryId) === editForm.categoryId
+                      )
+                      .map((sc) => (
+                        <option key={sc.id} value={sc.id}>
+                          {sc.name}
+                        </option>
+                      ))}
+                  </select>
                   <div>
                     <div className="mb-2 text-sm font-medium text-gray-700">
                       Current Images ({editForm.existingImages.length})
@@ -472,8 +624,6 @@ export default function ProductsPage() {
                       ))}
                     </div>
                   </div>
-
-                  {/* New images */}
                   <div>
                     <div className="mb-2 text-sm font-medium text-gray-700">
                       Add Images (max 5)
@@ -492,7 +642,7 @@ export default function ProductsPage() {
                           ...s,
                           newImages: [...s.newImages, ...toAdd],
                         }));
-                        e.currentTarget.value = ""; // reset input
+                        e.currentTarget.value = "";
                       }}
                       className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100 disabled:opacity-60"
                     />
@@ -533,16 +683,50 @@ export default function ProductsPage() {
                     )}
                   </div>
                 </div>
-
                 <div className="flex items-center justify-end gap-2 pt-2">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setIsEditOpen(false)}
+                    disabled={updating}
                   >
                     Cancel
                   </Button>
-                  <Button type="submit">Save</Button>
+                  <Button
+                    type="submit"
+                    disabled={updating}
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      if (!editingProductId) return;
+                      try {
+                        await dispatch(
+                          updateProduct({
+                            id: editingProductId,
+                            token: userToken,
+                            data: {
+                              title: editForm.title.trim(),
+                              description: editForm.description.trim(),
+                              price: Number(editForm.price) || 0,
+                              stock: Number(editForm.stock) || 0,
+                              brand: editForm.brand.trim(),
+                              categoryId: editForm.categoryId || undefined,
+                              subCategoryId:
+                                editForm.subCategoryId || undefined,
+                              existingImages: editForm.existingImages,
+                              newImages: editForm.newImages,
+                            },
+                          }) as any
+                        ).unwrap();
+                        toast.success("Product updated");
+                        setIsEditOpen(false);
+                        dispatch(fetchAllProducts());
+                      } catch (err: any) {
+                        toast.error(err?.message || "Failed to update");
+                      }
+                    }}
+                  >
+                    {updating ? "Saving..." : "Save"}
+                  </Button>
                 </div>
               </form>
             )}

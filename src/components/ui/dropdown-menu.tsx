@@ -1,16 +1,13 @@
 "use client";
-
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-
 interface DropdownMenuProps {
   children: React.ReactNode;
   trigger: React.ReactNode;
   align?: "start" | "center" | "end";
   side?: "top" | "bottom";
 }
-
 export function DropdownMenu({
   children,
   trigger,
@@ -19,7 +16,6 @@ export function DropdownMenu({
 }: DropdownMenuProps) {
   const [open, setOpen] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
-
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -29,28 +25,23 @@ export function DropdownMenu({
         setOpen(false);
       }
     }
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
   const alignmentClasses = {
     start: "left-0",
     center: "left-1/2 transform -translate-x-1/2",
     end: "right-0",
   };
-
   const sideClasses = {
     top: "bottom-full mb-1",
     bottom: "top-full mt-1",
   };
-
   return (
     <div className="relative" ref={dropdownRef}>
       <div onClick={() => setOpen(!open)} className="cursor-pointer">
         {trigger}
       </div>
-
       <AnimatePresence>
         {open && (
           <motion.div
@@ -75,14 +66,12 @@ export function DropdownMenu({
     </div>
   );
 }
-
 interface DropdownMenuItemProps {
   children: React.ReactNode;
   onClick?: () => void;
   className?: string;
   disabled?: boolean;
 }
-
 export function DropdownMenuItem({
   children,
   onClick,
@@ -105,7 +94,6 @@ export function DropdownMenuItem({
     </motion.div>
   );
 }
-
 export function DropdownMenuSeparator() {
   return <div className="h-px bg-gray-200 my-1" />;
 }
